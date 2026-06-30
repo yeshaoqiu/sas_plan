@@ -147,3 +147,24 @@ export function getDayProgress(
   ).s;
   return { total, scored, pointsEarned };
 }
+
+export function ensureDailyTasks(
+  db: Database.Database,
+  childId: number,
+  date: string,
+): TaskInstance[] {
+  const existing = listTasks(db, childId, date);
+  if (existing.length > 0) return existing;
+  const rows = db
+    .prepare(
+      `SELECT dp.template_id AS tid FROM daily_plan dp
+       JOIN task_templates t ON t.id = dp.template_id
+       WHERE dp.child_id = ? AND t.archived = 0
+       ORDER BY dp.id`,
+    )
+    .all(childId) as { tid: number }[];
+  for (const r of rows) {
+    assignTask(db, { childId, templateId: r.tid, date });
+  }
+  return listTasks(db, childId, date);
+}
