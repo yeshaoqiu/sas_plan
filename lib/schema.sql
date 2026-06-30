@@ -2,7 +2,8 @@ CREATE TABLE IF NOT EXISTS children (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   name TEXT NOT NULL,
   grade INTEGER NOT NULL,
-  avatar TEXT NOT NULL DEFAULT '🐣'
+  avatar TEXT NOT NULL DEFAULT '🐣',
+  archived INTEGER NOT NULL DEFAULT 0
 );
 
 CREATE TABLE IF NOT EXISTS task_templates (
@@ -10,7 +11,8 @@ CREATE TABLE IF NOT EXISTS task_templates (
   name TEXT NOT NULL,
   subject TEXT NOT NULL,
   default_minutes INTEGER NOT NULL,
-  base_points INTEGER NOT NULL
+  base_points INTEGER NOT NULL,
+  archived INTEGER NOT NULL DEFAULT 0
 );
 
 CREATE TABLE IF NOT EXISTS task_instances (

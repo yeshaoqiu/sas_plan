@@ -6,6 +6,7 @@ export interface Child {
   name: string;
   grade: number;
   avatar: string;
+  archived: number;
 }
 
 export interface TaskTemplate {
@@ -14,6 +15,7 @@ export interface TaskTemplate {
   subject: Subject;
   defaultMinutes: number;
   basePoints: number;
+  archived: number;
 }
 
 export interface TaskInstance {
