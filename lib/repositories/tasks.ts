@@ -102,7 +102,7 @@ export function scoreTask(
 
   const tx = db.transaction(() => {
     db.prepare(
-      `UPDATE task_instances SET status='scored', actual_minutes=?, focused=?, used_scaffold=?, did_check=?, error_count=?, note=?, points_awarded=? WHERE id=?`,
+      `UPDATE task_instances SET status='scored', actual_minutes=?, focused=?, used_scaffold=?, did_check=?, error_count=?, note=?, points_awarded=?, scored_at=COALESCE(scored_at, ?) WHERE id=?`,
     ).run(
       result.actualMinutes,
       result.focused ? 1 : 0,
@@ -111,6 +111,7 @@ export function scoreTask(
       result.errorCount,
       result.note ?? null,
       points,
+      result.now ?? new Date().toISOString(),
       taskId,
     );
     if (wasScored) {
