@@ -26,11 +26,19 @@ export default function Manage() {
   const [editChild, setEditChild] = useState<ChildRow | null>(null);
   const [editTpl, setEditTpl] = useState<TplRow | null>(null);
   const [editReward, setEditReward] = useState<RewardRow | null>(null);
+  const [plans, setPlans] = useState<Record<number, number[]>>({});
 
   function reload() {
     fetch("/api/children?all=1").then((r) => r.json()).then(setChildren);
     fetch("/api/templates?all=1").then((r) => r.json()).then(setTemplates);
     fetch("/api/rewards?all=1").then((r) => r.json()).then(setRewards);
+    fetch("/api/children?all=1").then((r) => r.json()).then((cs: ChildRow[]) => {
+      cs.filter((c) => c.archived === 0).forEach((c) => {
+        fetch(`/api/children/${c.id}/daily-plan`).then((r) => r.json()).then((ids: number[]) =>
+          setPlans((p) => ({ ...p, [c.id]: ids })),
+        );
+      });
+    });
   }
   useEffect(reload, []);
 
@@ -64,6 +72,16 @@ export default function Manage() {
   async function toggle(kind: string, id: number, action: "archive" | "restore") {
     await fetch(`/api/${kind}/${id}/${action}`, { method: "POST" });
     reload();
+  }
+  async function togglePlan(childId: number, templateId: number, on: boolean) {
+    await fetch(`/api/children/${childId}/daily-plan`, {
+      method: on ? "POST" : "DELETE",
+      body: JSON.stringify({ templateId }),
+    });
+    setPlans((p) => {
+      const cur = p[childId] ?? [];
+      return { ...p, [childId]: on ? [...cur, templateId] : cur.filter((x) => x !== templateId) };
+    });
   }
 
   const activeChildren = children.filter((c) => c.archived === 0);
@@ -173,6 +191,28 @@ export default function Manage() {
           <input type="number" value={rCost} onChange={(e) => setRCost(+e.target.value)} className="input w-24" />
           <button onClick={addReward} className="btn btn-primary px-3 py-1">新增奖励</button>
         </div>
+      </section>
+
+      {/* 每日计划 */}
+      <section>
+        <h2 className="mb-2 font-semibold">每日计划（打开应用自动派发当天）</h2>
+        {activeChildren.map((c) => (
+          <div key={c.id} className="card mb-2">
+            <div className="mb-1 font-medium">{c.avatar} {c.name}</div>
+            <div className="flex flex-wrap gap-3">
+              {activeTpls.map((t) => {
+                const on = (plans[c.id] ?? []).includes(t.id);
+                return (
+                  <label key={t.id} className="flex items-center gap-1 text-sm">
+                    <input type="checkbox" checked={on} onChange={(e) => togglePlan(c.id, t.id, e.target.checked)} />
+                    {t.name}
+                  </label>
+                );
+              })}
+              {activeTpls.length === 0 && <span className="text-slate-500 text-sm">先在上面添加任务模板</span>}
+            </div>
+          </div>
+        ))}
       </section>
 
       {/* 已归档 */}
