@@ -6,11 +6,12 @@ export const metadata = { title: "学习陪跑" };
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="zh-CN">
-      <body className="bg-slate-50 text-slate-900">
-        <nav className="flex gap-4 bg-white px-6 py-3 shadow-sm">
-          <a href="/" className="font-semibold">今日清单</a>
-          <a href="/rewards">奖励商店</a>
-          <a href="/manage">管理</a>
+      <body>
+        <nav className="flex items-center gap-1 bg-white px-6 py-3 shadow-sm">
+          <span className="mr-3 text-lg font-extrabold text-amber-600">🎒 学习陪跑</span>
+          <a href="/" className="rounded-full px-3 py-1.5 font-medium hover:bg-amber-100">今日清单</a>
+          <a href="/rewards" className="rounded-full px-3 py-1.5 font-medium hover:bg-amber-100">奖励商店</a>
+          <a href="/manage" className="rounded-full px-3 py-1.5 font-medium hover:bg-amber-100">管理</a>
         </nav>
         <main className="mx-auto max-w-3xl p-6">{children}</main>
       </body>
