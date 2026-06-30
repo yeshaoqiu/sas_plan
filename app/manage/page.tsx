@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { SUBJECT_META } from "../_components/subjectMeta";
 
 const SUBJECTS = [
   { value: "writing", label: "写字" },
@@ -39,23 +40,28 @@ export default function Manage() {
         <h2 className="mb-2 font-semibold">孩子</h2>
         <ul className="mb-2">{children.map((c) => <li key={c.id}>{c.avatar} {c.name}（{c.grade} 年级）</li>)}</ul>
         <div className="flex gap-2">
-          <input placeholder="姓名" value={cName} onChange={(e) => setCName(e.target.value)} className="rounded border px-2 py-1" />
-          <input type="number" value={cGrade} onChange={(e) => setCGrade(+e.target.value)} className="w-16 rounded border px-2 py-1" />
-          <button onClick={addChild} className="rounded bg-sky-500 px-3 py-1 text-white">添加</button>
+          <input placeholder="姓名" value={cName} onChange={(e) => setCName(e.target.value)} className="input" />
+          <input type="number" value={cGrade} onChange={(e) => setCGrade(+e.target.value)} className="input w-16" />
+          <button onClick={addChild} className="btn btn-primary px-3 py-1">添加</button>
         </div>
       </section>
 
       <section>
         <h2 className="mb-2 font-semibold">任务模板</h2>
-        <ul className="mb-2">{templates.map((t) => <li key={t.id}>{t.name}（{t.basePoints}分 / {t.defaultMinutes}分钟）</li>)}</ul>
+        <ul className="mb-2">{templates.map((t) => (
+          <li key={t.id} className="flex items-center gap-2">
+            <span className={`h-3 w-3 rounded-full ${SUBJECT_META[t.subject as keyof typeof SUBJECT_META]?.dot ?? "bg-slate-300"}`} />
+            {t.name}（{t.basePoints}分 / {t.defaultMinutes}分钟）
+          </li>
+        ))}</ul>
         <div className="flex flex-wrap gap-2">
-          <input placeholder="任务名" value={tName} onChange={(e) => setTName(e.target.value)} className="rounded border px-2 py-1" />
-          <select value={tSubject} onChange={(e) => setTSubject(e.target.value)} className="rounded border px-2 py-1">
+          <input placeholder="任务名" value={tName} onChange={(e) => setTName(e.target.value)} className="input" />
+          <select value={tSubject} onChange={(e) => setTSubject(e.target.value)} className="input">
             {SUBJECTS.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
           </select>
-          <input type="number" value={tMinutes} onChange={(e) => setTMinutes(+e.target.value)} className="w-20 rounded border px-2 py-1" placeholder="分钟" />
-          <input type="number" value={tPoints} onChange={(e) => setTPoints(+e.target.value)} className="w-20 rounded border px-2 py-1" placeholder="基础分" />
-          <button onClick={addTemplate} className="rounded bg-sky-500 px-3 py-1 text-white">添加</button>
+          <input type="number" value={tMinutes} onChange={(e) => setTMinutes(+e.target.value)} className="input w-20" placeholder="分钟" />
+          <input type="number" value={tPoints} onChange={(e) => setTPoints(+e.target.value)} className="input w-20" placeholder="基础分" />
+          <button onClick={addTemplate} className="btn btn-primary px-3 py-1">添加</button>
         </div>
       </section>
     </div>
