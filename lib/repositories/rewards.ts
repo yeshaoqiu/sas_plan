@@ -41,3 +41,27 @@ export function redeemReward(
   tx();
   return { balance: getBalance(db, input.childId) };
 }
+
+export function updateReward(
+  db: Database.Database,
+  id: number,
+  input: { name: string; cost: number },
+): Reward {
+  db.prepare("UPDATE rewards SET name = ?, cost = ? WHERE id = ?")
+    .run(input.name, input.cost, id);
+  return db.prepare("SELECT * FROM rewards WHERE id = ?").get(id) as Reward;
+}
+
+export function archiveReward(db: Database.Database, id: number): void {
+  db.prepare("UPDATE rewards SET active = 0 WHERE id = ?").run(id);
+}
+
+export function restoreReward(db: Database.Database, id: number): void {
+  db.prepare("UPDATE rewards SET active = 1 WHERE id = ?").run(id);
+}
+
+export function listAllRewards(db: Database.Database): Reward[] {
+  return db
+    .prepare("SELECT * FROM rewards ORDER BY active DESC, cost")
+    .all() as Reward[];
+}
