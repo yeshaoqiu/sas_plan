@@ -43,6 +43,12 @@ export default function Home() {
 
   async function loadTasks() {
     if (!childId) return;
+    if (date >= today()) {
+      await fetch(`/api/children/${childId}/ensure-day`, {
+        method: "POST",
+        body: JSON.stringify({ date }),
+      });
+    }
     const t = await fetch(`/api/tasks?childId=${childId}&date=${date}`).then((r) => r.json());
     setTasks(t);
     const p = await fetch(`/api/children/${childId}/progress?date=${date}`).then((r) => r.json());
