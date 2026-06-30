@@ -66,3 +66,15 @@ export function listEntries(db: Database.Database, childId: number): PointEntry[
     .all(childId) as Row[];
   return rows.map(toEntry);
 }
+
+export function listRedemptions(
+  db: Database.Database,
+  childId: number,
+): PointEntry[] {
+  const rows = db
+    .prepare(
+      "SELECT * FROM point_entries WHERE child_id = ? AND reward_id IS NOT NULL ORDER BY id DESC",
+    )
+    .all(childId) as Row[];
+  return rows.map(toEntry);
+}
