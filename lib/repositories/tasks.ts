@@ -131,6 +131,30 @@ export function scoreTask(
   return getTask(db, taskId)!;
 }
 
+export function startTask(
+  db: Database.Database,
+  taskId: number,
+  now?: string,
+): TaskInstance {
+  const ts = now ?? new Date().toISOString();
+  db.prepare(
+    "UPDATE task_instances SET started_at = ?, status = 'in_progress' WHERE id = ?",
+  ).run(ts, taskId);
+  return getTask(db, taskId)!;
+}
+
+export function completeTask(
+  db: Database.Database,
+  taskId: number,
+  now?: string,
+): TaskInstance {
+  const ts = now ?? new Date().toISOString();
+  db.prepare(
+    "UPDATE task_instances SET completed_at = ?, status = 'done' WHERE id = ?",
+  ).run(ts, taskId);
+  return getTask(db, taskId)!;
+}
+
 export function getDayProgress(
   db: Database.Database,
   childId: number,
