@@ -1,9 +1,11 @@
 import { NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
-import { createReward, listRewards } from "@/lib/repositories/rewards";
+import { createReward, listRewards, listAllRewards } from "@/lib/repositories/rewards";
 
-export async function GET() {
-  return NextResponse.json(listRewards(getDb()));
+export async function GET(req: Request) {
+  const all = new URL(req.url).searchParams.get("all") === "1";
+  const db = getDb();
+  return NextResponse.json(all ? listAllRewards(db) : listRewards(db));
 }
 
 export async function POST(req: Request) {

@@ -13,7 +13,7 @@ test("children API GET/POST", async () => {
   const created = await postRes.json();
   expect(created.name).toBe("小明");
 
-  const getRes = await GET();
+  const getRes = await GET(new Request("http://x/api/children"));
   const list = await getRes.json();
   expect(list.length).toBeGreaterThanOrEqual(1);
 });

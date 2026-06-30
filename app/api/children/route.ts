@@ -1,9 +1,11 @@
 import { NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
-import { createChild, listChildren } from "@/lib/repositories/children";
+import { createChild, listChildren, listAllChildren } from "@/lib/repositories/children";
 
-export async function GET() {
-  return NextResponse.json(listChildren(getDb()));
+export async function GET(req: Request) {
+  const all = new URL(req.url).searchParams.get("all") === "1";
+  const db = getDb();
+  return NextResponse.json(all ? listAllChildren(db) : listChildren(db));
 }
 
 export async function POST(req: Request) {

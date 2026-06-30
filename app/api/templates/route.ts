@@ -1,9 +1,11 @@
 import { NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
-import { createTemplate, listTemplates } from "@/lib/repositories/templates";
+import { createTemplate, listTemplates, listAllTemplates } from "@/lib/repositories/templates";
 
-export async function GET() {
-  return NextResponse.json(listTemplates(getDb()));
+export async function GET(req: Request) {
+  const all = new URL(req.url).searchParams.get("all") === "1";
+  const db = getDb();
+  return NextResponse.json(all ? listAllTemplates(db) : listTemplates(db));
 }
 
 export async function POST(req: Request) {
