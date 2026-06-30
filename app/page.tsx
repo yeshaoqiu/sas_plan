@@ -1,9 +1,11 @@
 "use client";
 import { useEffect, useState } from "react";
 import { ScoreForm } from "./_components/ScoreForm";
+import { SUBJECT_META } from "./_components/subjectMeta";
+import type { Subject } from "@/lib/types";
 
 interface Child { id: number; name: string; avatar: string }
-interface Template { id: number; name: string; subject: string }
+interface Template { id: number; name: string; subject: Subject }
 interface Task { id: number; templateId: number; status: string; pointsAwarded: number | null }
 
 function today() {
@@ -41,21 +43,22 @@ export default function Home() {
   }
 
   const tplName = (id: number) => templates.find((t) => t.id === id)?.name ?? "?";
+  const tplSubject = (id: number) => templates.find((t) => t.id === id)?.subject;
 
   return (
     <div className="space-y-4">
       <div className="flex gap-3">
-        <select value={childId ?? ""} onChange={(e) => setChildId(+e.target.value)} className="rounded border px-2 py-1">
+        <select value={childId ?? ""} onChange={(e) => setChildId(+e.target.value)} className="input">
           {children.map((c) => <option key={c.id} value={c.id}>{c.avatar} {c.name}</option>)}
         </select>
-        <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="rounded border px-2 py-1" />
+        <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="input" />
       </div>
 
       <div>
         <h2 className="mb-2 font-semibold">派发任务</h2>
         <div className="flex flex-wrap gap-2">
           {templates.map((t) => (
-            <button key={t.id} onClick={() => assign(t.id)} className="rounded bg-sky-500 px-3 py-1 text-sm text-white">+ {t.name}</button>
+            <button key={t.id} onClick={() => assign(t.id)} className="btn btn-sky px-3 py-1 text-sm">+ {t.name}</button>
           ))}
         </div>
       </div>
@@ -63,18 +66,24 @@ export default function Home() {
       <div>
         <h2 className="mb-2 font-semibold">今日任务</h2>
         <ul className="space-y-2">
-          {tasks.map((t) => (
-            <li key={t.id} className="rounded bg-white p-3 shadow-sm">
-              <div className="flex items-center justify-between">
-                <span>{tplName(t.templateId)}</span>
-                {t.status === "scored"
-                  ? <span className="text-emerald-600">已评分 +{t.pointsAwarded}</span>
-                  : <button onClick={() => setScoring(scoring === t.id ? null : t.id)} className="rounded bg-amber-500 px-2 py-1 text-sm text-white">评分</button>}
-              </div>
-              {scoring === t.id && <ScoreForm taskId={t.id} onDone={() => { setScoring(null); loadTasks(); }} />}
-            </li>
-          ))}
-          {tasks.length === 0 && <li className="text-slate-500">还没有任务，点上面派发。</li>}
+          {tasks.map((t) => {
+            const subj = tplSubject(t.templateId);
+            return (
+              <li key={t.id} className="card">
+                <div className="flex items-center justify-between">
+                  <span className="flex items-center gap-2">
+                    <span className={`h-3 w-3 rounded-full ${subj ? SUBJECT_META[subj].dot : "bg-slate-300"}`} />
+                    {tplName(t.templateId)}
+                  </span>
+                  {t.status === "scored"
+                    ? <span className="chip bg-emerald-100 text-emerald-700">🎉 已评分 +{t.pointsAwarded}</span>
+                    : <button onClick={() => setScoring(scoring === t.id ? null : t.id)} className="btn btn-primary px-3 py-1 text-sm">评分</button>}
+                </div>
+                {scoring === t.id && <ScoreForm taskId={t.id} onDone={() => { setScoring(null); loadTasks(); }} />}
+              </li>
+            );
+          })}
+          {tasks.length === 0 && <li className="text-slate-500">🙌 还没有任务，点上面派发。</li>}
         </ul>
       </div>
     </div>
