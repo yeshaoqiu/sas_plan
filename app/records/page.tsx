@@ -82,9 +82,9 @@ export default function Records() {
       <Modal open={showRedemptions} title="兑换历史" onClose={() => setShowRedemptions(false)}>
         <ul className="space-y-2">
           {redemptions.map((e) => (
-            <li key={e.id} className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2">
+            <li key={e.id} className="flex items-center justify-between gap-3 rounded-lg bg-slate-50 px-3 py-2">
               <span>{e.reason}</span>
-              <span className="text-rose-500">{e.delta}⭐ · {fmt(e.createdAt)}</span>
+              <span className="whitespace-nowrap text-rose-500">{e.delta}⭐ · {fmt(e.createdAt)}</span>
             </li>
           ))}
           {redemptions.length === 0 && <li className="text-slate-500">还没有兑换记录。</li>}
@@ -94,9 +94,9 @@ export default function Records() {
       <Modal open={showLedger} title="积分流水" onClose={() => setShowLedger(false)}>
         <ul className="space-y-1 text-sm">
           {entries.map((e) => (
-            <li key={e.id} className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2">
+            <li key={e.id} className="flex items-center justify-between gap-3 rounded-lg bg-slate-50 px-3 py-2">
               <span>{e.reason}</span>
-              <span className={e.delta >= 0 ? "text-emerald-600" : "text-rose-500"}>
+              <span className={`whitespace-nowrap ${e.delta >= 0 ? "text-emerald-600" : "text-rose-500"}`}>
                 {e.delta >= 0 ? `+${e.delta}` : e.delta}⭐ · {fmt(e.createdAt)}
               </span>
             </li>

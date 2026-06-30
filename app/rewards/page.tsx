@@ -6,8 +6,6 @@ export default function Rewards() {
   const [childId, setChildId] = useState<number | null>(null);
   const [balance, setBalance] = useState(0);
   const [rewards, setRewards] = useState<any[]>([]);
-  const [rName, setRName] = useState("");
-  const [rCost, setRCost] = useState(30);
 
   useEffect(() => {
     fetch("/api/children").then((r) => r.json()).then((c) => {
@@ -29,12 +27,6 @@ export default function Rewards() {
     if (!res.ok) { alert((await res.json()).error); return; }
     loadBalance();
   }
-  async function addReward() {
-    const res = await fetch("/api/rewards", { method: "POST", body: JSON.stringify({ name: rName, cost: rCost }) });
-    if (!res.ok) { alert((await res.json()).error); return; }
-    setRName("");
-    fetch("/api/rewards").then((r) => r.json()).then(setRewards);
-  }
 
   return (
     <div className="space-y-5">
@@ -52,13 +44,8 @@ export default function Rewards() {
             <button onClick={() => redeem(r.id)} disabled={balance < r.cost} className="btn btn-rose px-3 py-1">兑换</button>
           </li>
         ))}
+        {rewards.length === 0 && <li className="text-slate-500">还没有奖励，去「管理」添加。</li>}
       </ul>
-
-      <div className="flex gap-2">
-        <input placeholder="奖励名" value={rName} onChange={(e) => setRName(e.target.value)} className="input" />
-        <input type="number" value={rCost} onChange={(e) => setRCost(+e.target.value)} className="input w-24" />
-        <button onClick={addReward} className="btn btn-primary px-3 py-1">新增奖励</button>
-      </div>
     </div>
   );
 }
