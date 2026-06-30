@@ -117,3 +117,26 @@ export function scoreTask(
   tx();
   return getTask(db, taskId)!;
 }
+
+export function getDayProgress(
+  db: Database.Database,
+  childId: number,
+  date: string,
+): { total: number; scored: number; pointsEarned: number } {
+  const total = (
+    db
+      .prepare("SELECT COUNT(*) AS n FROM task_instances WHERE child_id = ? AND date = ?")
+      .get(childId, date) as { n: number }
+  ).n;
+  const scored = (
+    db
+      .prepare("SELECT COUNT(*) AS n FROM task_instances WHERE child_id = ? AND date = ? AND status = 'scored'")
+      .get(childId, date) as { n: number }
+  ).n;
+  const pointsEarned = (
+    db
+      .prepare("SELECT COALESCE(SUM(points_awarded), 0) AS s FROM task_instances WHERE child_id = ? AND date = ? AND status = 'scored'")
+      .get(childId, date) as { s: number }
+  ).s;
+  return { total, scored, pointsEarned };
+}
