@@ -4,7 +4,7 @@ import { Modal } from "../_components/Modal";
 
 interface Child { id: number; name: string; avatar: string }
 interface Template { id: number; name: string }
-interface Task { id: number; templateId: number; status: string; pointsAwarded: number | null }
+interface Task { id: number; templateId: number; status: string; pointsAwarded: number | null; startedAt: string | null; completedAt: string | null; scoredAt: string | null }
 interface Entry { id: number; delta: number; reason: string; createdAt: string }
 
 function today() {
@@ -63,11 +63,16 @@ export default function Records() {
         </div>
         <ul className="space-y-2">
           {tasks.map((t) => (
-            <li key={t.id} className="card flex items-center justify-between">
-              <span>{tplName(t.templateId)}</span>
-              {t.status === "scored"
-                ? <span className="chip bg-emerald-100 text-emerald-700">已评分 +{t.pointsAwarded}</span>
-                : <span className="chip bg-slate-100 text-slate-500">未完成</span>}
+            <li key={t.id} className="card">
+              <div className="flex items-center justify-between">
+                <span>{tplName(t.templateId)}</span>
+                {t.status === "scored"
+                  ? <span className="chip bg-emerald-100 text-emerald-700">已评分 +{t.pointsAwarded}</span>
+                  : <span className="chip bg-slate-100 text-slate-500">{t.status === "done" ? "待评分" : t.status === "in_progress" ? "进行中" : "未开始"}</span>}
+              </div>
+              <div className="mt-1 text-xs text-slate-500">
+                开始 {t.startedAt ? fmt(t.startedAt) : "—"} · 完成 {t.completedAt ? fmt(t.completedAt) : "—"} · 评分 {t.scoredAt ? fmt(t.scoredAt) : "—"}
+              </div>
             </li>
           ))}
           {tasks.length === 0 && <li className="text-slate-500">这一天没有任务。</li>}
