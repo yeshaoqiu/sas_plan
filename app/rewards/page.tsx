@@ -30,7 +30,8 @@ export default function Rewards() {
     loadBalance();
   }
   async function addReward() {
-    await fetch("/api/rewards", { method: "POST", body: JSON.stringify({ name: rName, cost: rCost }) });
+    const res = await fetch("/api/rewards", { method: "POST", body: JSON.stringify({ name: rName, cost: rCost }) });
+    if (!res.ok) { alert((await res.json()).error); return; }
     setRName("");
     fetch("/api/rewards").then((r) => r.json()).then(setRewards);
   }

@@ -35,7 +35,8 @@ export default function Home() {
   useEffect(() => { loadTasks(); }, [childId, date]);
 
   async function assign(templateId: number) {
-    await fetch("/api/tasks", { method: "POST", body: JSON.stringify({ childId, templateId, date }) });
+    const res = await fetch("/api/tasks", { method: "POST", body: JSON.stringify({ childId, templateId, date }) });
+    if (!res.ok) { alert((await res.json()).error); return; }
     loadTasks();
   }
 

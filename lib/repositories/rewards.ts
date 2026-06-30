@@ -28,13 +28,16 @@ export function redeemReward(
     .prepare("SELECT * FROM rewards WHERE id = ?")
     .get(input.rewardId) as Reward | undefined;
   if (!reward) throw new Error("奖励不存在");
-  if (getBalance(db, input.childId) < reward.cost) throw new Error("积分不足");
-  addPointEntry(db, {
-    childId: input.childId,
-    delta: -reward.cost,
-    reason: `兑换: ${reward.name}`,
-    rewardId: reward.id,
-    now: input.now,
+  const tx = db.transaction(() => {
+    if (getBalance(db, input.childId) < reward.cost) throw new Error("积分不足");
+    addPointEntry(db, {
+      childId: input.childId,
+      delta: -reward.cost,
+      reason: `兑换: ${reward.name}`,
+      rewardId: reward.id,
+      now: input.now,
+    });
   });
+  tx();
   return { balance: getBalance(db, input.childId) };
 }
