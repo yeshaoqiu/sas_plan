@@ -20,6 +20,7 @@ export default function Home() {
   const [date, setDate] = useState(today());
   const [tasks, setTasks] = useState<Task[]>([]);
   const [scoring, setScoring] = useState<number | null>(null);
+  const [progress, setProgress] = useState<{ total: number; scored: number; pointsEarned: number }>({ total: 0, scored: 0, pointsEarned: 0 });
 
   useEffect(() => {
     fetch("/api/children").then((r) => r.json()).then((c) => {
@@ -33,6 +34,8 @@ export default function Home() {
     if (!childId) return;
     const t = await fetch(`/api/tasks?childId=${childId}&date=${date}`).then((r) => r.json());
     setTasks(t);
+    const p = await fetch(`/api/children/${childId}/progress?date=${date}`).then((r) => r.json());
+    setProgress(p);
   }
   useEffect(() => { loadTasks(); }, [childId, date]);
 
@@ -52,6 +55,19 @@ export default function Home() {
           {children.map((c) => <option key={c.id} value={c.id}>{c.avatar} {c.name}</option>)}
         </select>
         <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="input" />
+      </div>
+
+      <div className="card">
+        <div className="mb-1 flex items-center justify-between text-sm font-medium">
+          <span>当日进度</span>
+          <span className="text-amber-600">已完成 {progress.scored}/{progress.total} · 获得 {progress.pointsEarned}⭐</span>
+        </div>
+        <div className="h-3 w-full overflow-hidden rounded-full bg-amber-100">
+          <div
+            className="h-full rounded-full bg-amber-500 transition-all"
+            style={{ width: `${progress.total ? Math.round((progress.scored / progress.total) * 100) : 0}%` }}
+          />
+        </div>
       </div>
 
       <div>
