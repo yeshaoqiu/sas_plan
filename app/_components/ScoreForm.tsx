@@ -1,13 +1,28 @@
 "use client";
 import { useState } from "react";
 
-export function ScoreForm({ taskId, onDone }: { taskId: number; onDone: () => void }) {
-  const [actualMinutes, setMinutes] = useState(5);
-  const [focused, setFocused] = useState(false);
-  const [usedScaffold, setScaffold] = useState(false);
-  const [didCheck, setCheck] = useState(false);
-  const [errorCount, setErrors] = useState(0);
-  const [note, setNote] = useState("");
+export function ScoreForm({
+  taskId,
+  onDone,
+  initial,
+}: {
+  taskId: number;
+  onDone: () => void;
+  initial?: {
+    actualMinutes: number;
+    focused: boolean;
+    usedScaffold: boolean;
+    didCheck: boolean;
+    errorCount: number;
+    note: string;
+  };
+}) {
+  const [actualMinutes, setMinutes] = useState(initial?.actualMinutes ?? 5);
+  const [focused, setFocused] = useState(initial?.focused ?? false);
+  const [usedScaffold, setScaffold] = useState(initial?.usedScaffold ?? false);
+  const [didCheck, setCheck] = useState(initial?.didCheck ?? false);
+  const [errorCount, setErrors] = useState(initial?.errorCount ?? 0);
+  const [note, setNote] = useState(initial?.note ?? "");
 
   async function submit() {
     const res = await fetch(`/api/tasks/${taskId}/score`, {

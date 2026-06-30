@@ -6,7 +6,18 @@ import type { Subject } from "@/lib/types";
 
 interface Child { id: number; name: string; avatar: string }
 interface Template { id: number; name: string; subject: Subject }
-interface Task { id: number; templateId: number; status: string; pointsAwarded: number | null }
+interface Task {
+  id: number;
+  templateId: number;
+  status: string;
+  pointsAwarded: number | null;
+  actualMinutes: number | null;
+  focused: number | null;
+  usedScaffold: number | null;
+  didCheck: number | null;
+  errorCount: number | null;
+  note: string | null;
+}
 
 function today() {
   const d = new Date();
@@ -47,6 +58,14 @@ export default function Home() {
 
   const tplName = (id: number) => templates.find((t) => t.id === id)?.name ?? "?";
   const tplSubject = (id: number) => templates.find((t) => t.id === id)?.subject;
+  const initialFor = (t: Task) => ({
+    actualMinutes: t.actualMinutes ?? 5,
+    focused: !!t.focused,
+    usedScaffold: !!t.usedScaffold,
+    didCheck: !!t.didCheck,
+    errorCount: t.errorCount ?? 0,
+    note: t.note ?? "",
+  });
 
   return (
     <div className="space-y-4">
@@ -91,11 +110,22 @@ export default function Home() {
                     <span className={`h-3 w-3 rounded-full ${subj ? SUBJECT_META[subj].dot : "bg-slate-300"}`} />
                     {tplName(t.templateId)}
                   </span>
-                  {t.status === "scored"
-                    ? <span className="chip bg-emerald-100 text-emerald-700">🎉 已评分 +{t.pointsAwarded}</span>
-                    : <button onClick={() => setScoring(scoring === t.id ? null : t.id)} className="btn btn-primary px-3 py-1 text-sm">评分</button>}
+                  {t.status === "scored" ? (
+                    <span className="flex items-center gap-2">
+                      <span className="chip bg-emerald-100 text-emerald-700">🎉 已评分 +{t.pointsAwarded}</span>
+                      <button onClick={() => setScoring(scoring === t.id ? null : t.id)} className="btn btn-sky px-3 py-1 text-sm">查看/修改</button>
+                    </span>
+                  ) : (
+                    <button onClick={() => setScoring(scoring === t.id ? null : t.id)} className="btn btn-primary px-3 py-1 text-sm">评分</button>
+                  )}
                 </div>
-                {scoring === t.id && <ScoreForm taskId={t.id} onDone={() => { setScoring(null); loadTasks(); }} />}
+                {scoring === t.id && (
+                  <ScoreForm
+                    taskId={t.id}
+                    initial={t.status === "scored" ? initialFor(t) : undefined}
+                    onDone={() => { setScoring(null); loadTasks(); }}
+                  />
+                )}
               </li>
             );
           })}
