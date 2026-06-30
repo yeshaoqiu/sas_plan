@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { Modal } from "../_components/Modal";
 
 interface Child { id: number; name: string; avatar: string }
 interface Template { id: number; name: string }
@@ -23,6 +24,8 @@ export default function Records() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [redemptions, setRedemptions] = useState<Entry[]>([]);
   const [entries, setEntries] = useState<Entry[]>([]);
+  const [showRedemptions, setShowRedemptions] = useState(false);
+  const [showLedger, setShowLedger] = useState(false);
 
   useEffect(() => {
     fetch("/api/children").then((r) => r.json()).then((c: Child[]) => {
@@ -71,24 +74,27 @@ export default function Records() {
         </ul>
       </section>
 
-      <section>
-        <h2 className="mb-2 font-semibold">兑换历史</h2>
+      <div className="flex gap-3">
+        <button className="btn btn-sky px-3 py-1" onClick={() => setShowRedemptions(true)}>查看兑换历史</button>
+        <button className="btn btn-primary px-3 py-1" onClick={() => setShowLedger(true)}>查看积分流水</button>
+      </div>
+
+      <Modal open={showRedemptions} title="兑换历史" onClose={() => setShowRedemptions(false)}>
         <ul className="space-y-2">
           {redemptions.map((e) => (
-            <li key={e.id} className="card flex items-center justify-between">
+            <li key={e.id} className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2">
               <span>{e.reason}</span>
               <span className="text-rose-500">{e.delta}⭐ · {fmt(e.createdAt)}</span>
             </li>
           ))}
           {redemptions.length === 0 && <li className="text-slate-500">还没有兑换记录。</li>}
         </ul>
-      </section>
+      </Modal>
 
-      <section>
-        <h2 className="mb-2 font-semibold">积分流水</h2>
+      <Modal open={showLedger} title="积分流水" onClose={() => setShowLedger(false)}>
         <ul className="space-y-1 text-sm">
           {entries.map((e) => (
-            <li key={e.id} className="flex items-center justify-between rounded-lg bg-white px-3 py-2 shadow-sm">
+            <li key={e.id} className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2">
               <span>{e.reason}</span>
               <span className={e.delta >= 0 ? "text-emerald-600" : "text-rose-500"}>
                 {e.delta >= 0 ? `+${e.delta}` : e.delta}⭐ · {fmt(e.createdAt)}
@@ -97,7 +103,7 @@ export default function Records() {
           ))}
           {entries.length === 0 && <li className="text-slate-500">还没有积分记录。</li>}
         </ul>
-      </section>
+      </Modal>
     </div>
   );
 }
