@@ -17,6 +17,9 @@ interface Row {
   error_count: number | null;
   note: string | null;
   points_awarded: number | null;
+  started_at: string | null;
+  completed_at: string | null;
+  scored_at: string | null;
 }
 
 function toTask(r: Row): TaskInstance {
@@ -33,6 +36,9 @@ function toTask(r: Row): TaskInstance {
     errorCount: r.error_count,
     note: r.note,
     pointsAwarded: r.points_awarded,
+    startedAt: r.started_at,
+    completedAt: r.completed_at,
+    scoredAt: r.scored_at,
   };
 }
 
