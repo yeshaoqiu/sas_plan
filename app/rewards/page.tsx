@@ -39,25 +39,25 @@ export default function Rewards() {
   return (
     <div className="space-y-5">
       <div className="flex items-center gap-3">
-        <select value={childId ?? ""} onChange={(e) => setChildId(+e.target.value)} className="rounded border px-2 py-1">
+        <select value={childId ?? ""} onChange={(e) => setChildId(+e.target.value)} className="input">
           {children.map((c) => <option key={c.id} value={c.id}>{c.avatar} {c.name}</option>)}
         </select>
-        <span className="text-2xl font-bold text-amber-500">⭐ {balance}</span>
+        <span className="balance-badge">⭐ {balance}</span>
       </div>
 
       <ul className="space-y-2">
         {rewards.map((r) => (
-          <li key={r.id} className="flex items-center justify-between rounded bg-white p-3 shadow-sm">
+          <li key={r.id} className="card flex items-center justify-between">
             <span>{r.name}（{r.cost} 分）</span>
-            <button onClick={() => redeem(r.id)} disabled={balance < r.cost} className="rounded bg-rose-500 px-3 py-1 text-white disabled:bg-slate-300">兑换</button>
+            <button onClick={() => redeem(r.id)} disabled={balance < r.cost} className="btn btn-rose px-3 py-1">兑换</button>
           </li>
         ))}
       </ul>
 
       <div className="flex gap-2">
-        <input placeholder="奖励名" value={rName} onChange={(e) => setRName(e.target.value)} className="rounded border px-2 py-1" />
-        <input type="number" value={rCost} onChange={(e) => setRCost(+e.target.value)} className="w-24 rounded border px-2 py-1" />
-        <button onClick={addReward} className="rounded bg-sky-500 px-3 py-1 text-white">新增奖励</button>
+        <input placeholder="奖励名" value={rName} onChange={(e) => setRName(e.target.value)} className="input" />
+        <input type="number" value={rCost} onChange={(e) => setRCost(+e.target.value)} className="input w-24" />
+        <button onClick={addReward} className="btn btn-primary px-3 py-1">新增奖励</button>
       </div>
     </div>
   );
