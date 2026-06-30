@@ -81,10 +81,10 @@ export function scoreTask(
 ): TaskInstance {
   const task = getTask(db, taskId);
   if (!task) throw new Error("任务不存在");
-  if (task.status === "scored") throw new Error("任务已评分");
   const tpl = getTemplate(db, task.templateId);
   if (!tpl) throw new Error("任务模板不存在");
 
+  const wasScored = task.status === "scored";
   const points = computePoints({
     basePoints: tpl.basePoints,
     focused: result.focused,
@@ -92,6 +92,7 @@ export function scoreTask(
     didCheck: result.didCheck,
     errorCount: result.errorCount,
   });
+  const reason = `完成任务: ${tpl.name}`;
 
   const tx = db.transaction(() => {
     db.prepare(
@@ -106,13 +107,19 @@ export function scoreTask(
       points,
       taskId,
     );
-    addPointEntry(db, {
-      childId: task.childId,
-      delta: points,
-      reason: `完成任务: ${tpl.name}`,
-      taskInstanceId: taskId,
-      now: result.now,
-    });
+    if (wasScored) {
+      db.prepare(
+        "UPDATE point_entries SET delta = ?, reason = ? WHERE task_instance_id = ?",
+      ).run(points, reason, taskId);
+    } else {
+      addPointEntry(db, {
+        childId: task.childId,
+        delta: points,
+        reason,
+        taskInstanceId: taskId,
+        now: result.now,
+      });
+    }
   });
   tx();
   return getTask(db, taskId)!;

@@ -3,7 +3,7 @@ import { createDb } from "@/lib/db";
 import { createChild } from "@/lib/repositories/children";
 import { createTemplate } from "@/lib/repositories/templates";
 import { assignTask, listTasks, scoreTask } from "@/lib/repositories/tasks";
-import { getBalance } from "@/lib/repositories/points";
+import { getBalance, listEntries } from "@/lib/repositories/points";
 
 function setup() {
   const db = createDb(":memory:");
@@ -40,11 +40,19 @@ test("scoring writes points and updates status", () => {
   expect(getBalance(db, child.id)).toBe(15);
 });
 
-test("cannot score twice", () => {
+test("re-scoring updates points and balance without adding a new entry", () => {
   const { db, child, tpl } = setup();
   const t = assignTask(db, { childId: child.id, templateId: tpl.id, date: "2026-06-29" });
+
+  // first score: base 10
   scoreTask(db, t.id, { actualMinutes: 5, focused: false, usedScaffold: false, didCheck: false, errorCount: 0 });
-  expect(() =>
-    scoreTask(db, t.id, { actualMinutes: 5, focused: false, usedScaffold: false, didCheck: false, errorCount: 0 }),
-  ).toThrow("任务已评分");
+  expect(getBalance(db, child.id)).toBe(10);
+  const entryCountBefore = listEntries(db, child.id).length;
+
+  // re-score: base 10 + focus 5 = 15
+  const updated = scoreTask(db, t.id, { actualMinutes: 6, focused: true, usedScaffold: false, didCheck: false, errorCount: 0 });
+  expect(updated.status).toBe("scored");
+  expect(updated.pointsAwarded).toBe(15);
+  expect(getBalance(db, child.id)).toBe(15);
+  expect(listEntries(db, child.id).length).toBe(entryCountBefore); // no new entry added
 });
