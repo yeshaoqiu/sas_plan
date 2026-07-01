@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { Modal } from "../_components/Modal";
+import { shiftDate, todayStr } from "../_components/dateNav";
 
 interface Child { id: number; name: string; avatar: string }
 interface Template { id: number; name: string }
@@ -66,6 +67,11 @@ export default function Records() {
         <div className="mb-2 flex items-center gap-3">
           <h2 className="font-semibold">按天回看任务</h2>
           <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="input" />
+          <div className="flex gap-1">
+            <button onClick={() => setDate(shiftDate(date, -1))} className="btn btn-sky px-2 py-1 text-sm">前一天</button>
+            <button onClick={() => setDate(todayStr())} className="btn btn-primary px-2 py-1 text-sm">今天</button>
+            <button onClick={() => setDate(shiftDate(date, 1))} className="btn btn-sky px-2 py-1 text-sm">后一天</button>
+          </div>
         </div>
         <ul className="space-y-2">
           {tasks.map((t) => (

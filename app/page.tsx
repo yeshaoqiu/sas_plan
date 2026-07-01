@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { ScoreForm } from "./_components/ScoreForm";
 import { SUBJECT_META } from "./_components/subjectMeta";
+import { shiftDate, todayStr } from "./_components/dateNav";
 import type { Subject } from "@/lib/types";
 
 interface Child { id: number; name: string; avatar: string }
@@ -88,6 +89,11 @@ export default function Home() {
           {children.map((c) => <option key={c.id} value={c.id}>{c.avatar} {c.name}</option>)}
         </select>
         <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="input" />
+        <div className="flex gap-1">
+          <button onClick={() => setDate(shiftDate(date, -1))} className="btn btn-sky px-2 py-1 text-sm">前一天</button>
+          <button onClick={() => setDate(todayStr())} className="btn btn-primary px-2 py-1 text-sm">今天</button>
+          <button onClick={() => setDate(shiftDate(date, 1))} className="btn btn-sky px-2 py-1 text-sm">后一天</button>
+        </div>
       </div>
 
       <div className="card">
