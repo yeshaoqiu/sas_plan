@@ -34,6 +34,7 @@ export interface TaskInstance {
   startedAt: string | null;
   completedAt: string | null;
   scoredAt: string | null;
+  bonusItemIds: number[];
 }
 
 export interface PointEntry {

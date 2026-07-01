@@ -40,6 +40,7 @@ function toTask(r: Row): TaskInstance {
     startedAt: r.started_at,
     completedAt: r.completed_at,
     scoredAt: r.scored_at,
+    bonusItemIds: [],
   };
 }
 
@@ -47,7 +48,10 @@ function getTask(db: Database.Database, id: number): TaskInstance | undefined {
   const r = db.prepare("SELECT * FROM task_instances WHERE id = ?").get(id) as
     | Row
     | undefined;
-  return r ? toTask(r) : undefined;
+  if (!r) return undefined;
+  const task = toTask(r);
+  task.bonusItemIds = listTaskBonus(db, id);
+  return task;
 }
 
 export function assignTask(
@@ -70,7 +74,11 @@ export function listTasks(
   const rows = db
     .prepare("SELECT * FROM task_instances WHERE child_id = ? AND date = ? ORDER BY id")
     .all(childId, date) as Row[];
-  return rows.map(toTask);
+  return rows.map((r) => {
+    const task = toTask(r);
+    task.bonusItemIds = listTaskBonus(db, task.id);
+    return task;
+  });
 }
 
 export function scoreTask(
