@@ -11,9 +11,7 @@ export async function POST(
   try {
     const task = scoreTask(getDb(), Number(id), {
       actualMinutes: Number(body.actualMinutes),
-      focused: !!body.focused,
-      usedScaffold: !!body.usedScaffold,
-      didCheck: !!body.didCheck,
+      bonusItemIds: Array.isArray(body.bonusItemIds) ? body.bonusItemIds.map(Number) : [],
       errorCount: Number(body.errorCount ?? 0),
       note: body.note,
     });
