@@ -4,7 +4,7 @@ import { Modal } from "../_components/Modal";
 
 interface Child { id: number; name: string; avatar: string }
 interface Template { id: number; name: string }
-interface Task { id: number; templateId: number; status: string; pointsAwarded: number | null; startedAt: string | null; completedAt: string | null; scoredAt: string | null; bonusItemIds: number[] }
+interface Task { id: number; templateId: number; status: string; pointsAwarded: number | null; startedAt: string | null; completedAt: string | null; scoredAt: string | null; bonusItemIds: number[]; note: string | null }
 interface Entry { id: number; delta: number; reason: string; createdAt: string }
 
 function today() {
@@ -86,6 +86,7 @@ export default function Records() {
                   ))}
                 </div>
               )}
+              {t.note && <div className="mt-1 text-xs text-slate-600">备注：{t.note}</div>}
             </li>
           ))}
           {tasks.length === 0 && <li className="text-slate-500">这一天没有任务。</li>}
