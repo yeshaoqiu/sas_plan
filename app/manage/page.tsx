@@ -12,11 +12,14 @@ const SUBJECTS = [
 interface ChildRow { id: number; name: string; grade: number; avatar: string; archived: number }
 interface TplRow { id: number; name: string; subject: string; defaultMinutes: number; basePoints: number; archived: number }
 interface RewardRow { id: number; name: string; cost: number; active: number }
+interface BonusRow { id: number; name: string; description: string; points: number; active: number; sortOrder: number }
 
 export default function Manage() {
   const [children, setChildren] = useState<ChildRow[]>([]);
   const [templates, setTemplates] = useState<TplRow[]>([]);
   const [rewards, setRewards] = useState<RewardRow[]>([]);
+  const [bonusItems, setBonusItems] = useState<BonusRow[]>([]);
+  const [settings, setSettings] = useState<{ onTimeBonus: number; errorPenalty: number; minPoints: number }>({ onTimeBonus: 3, errorPenalty: 2, minPoints: 1 });
   // create inputs
   const [cName, setCName] = useState(""); const [cGrade, setCGrade] = useState(1);
   const [tName, setTName] = useState(""); const [tSubject, setTSubject] = useState("writing");
@@ -26,12 +29,16 @@ export default function Manage() {
   const [editChild, setEditChild] = useState<ChildRow | null>(null);
   const [editTpl, setEditTpl] = useState<TplRow | null>(null);
   const [editReward, setEditReward] = useState<RewardRow | null>(null);
+  const [editBonus, setEditBonus] = useState<BonusRow | null>(null);
+  const [bName, setBName] = useState(""); const [bDesc, setBDesc] = useState(""); const [bPoints, setBPoints] = useState(5);
   const [plans, setPlans] = useState<Record<number, number[]>>({});
 
   function reload() {
     fetch("/api/children?all=1").then((r) => r.json()).then(setChildren);
     fetch("/api/templates?all=1").then((r) => r.json()).then(setTemplates);
     fetch("/api/rewards?all=1").then((r) => r.json()).then(setRewards);
+    fetch("/api/bonus-items?all=1").then((r) => r.json()).then(setBonusItems);
+    fetch("/api/scoring-settings").then((r) => r.json()).then(setSettings);
     fetch("/api/children?all=1").then((r) => r.json()).then((cs: ChildRow[]) => {
       cs.filter((c) => c.archived === 0).forEach((c) => {
         fetch(`/api/children/${c.id}/daily-plan`).then((r) => r.json()).then((ids: number[]) =>
@@ -69,6 +76,20 @@ export default function Manage() {
     await fetch(`/api/rewards/${editReward.id}`, { method: "PATCH", body: JSON.stringify(editReward) });
     setEditReward(null); reload();
   }
+  async function addBonus() {
+    await fetch("/api/bonus-items", { method: "POST", body: JSON.stringify({ name: bName, description: bDesc, points: bPoints, sortOrder: activeBonus.length }) });
+    setBName(""); setBDesc(""); reload();
+  }
+  async function saveBonus() {
+    if (!editBonus) return;
+    await fetch(`/api/bonus-items/${editBonus.id}`, { method: "PATCH", body: JSON.stringify(editBonus) });
+    setEditBonus(null); reload();
+  }
+  async function saveSettings() {
+    const s = await fetch("/api/scoring-settings", { method: "PATCH", body: JSON.stringify(settings) }).then((r) => r.json());
+    setSettings(s);
+    alert("评分设置已保存");
+  }
   async function toggle(kind: string, id: number, action: "archive" | "restore") {
     await fetch(`/api/${kind}/${id}/${action}`, { method: "POST" });
     reload();
@@ -90,6 +111,8 @@ export default function Manage() {
   const archivedTpls = templates.filter((t) => t.archived === 1);
   const activeRewards = rewards.filter((r) => r.active === 1);
   const archivedRewards = rewards.filter((r) => r.active === 0);
+  const activeBonus = bonusItems.filter((b) => b.active === 1);
+  const archivedBonus = bonusItems.filter((b) => b.active === 0);
 
   return (
     <div className="space-y-8">
@@ -215,6 +238,56 @@ export default function Manage() {
         ))}
       </section>
 
+      {/* 加分项 */}
+      <section>
+        <h2 className="mb-2 font-semibold">加分项（评分时可勾选）</h2>
+        <ul className="mb-2 space-y-1">
+          {activeBonus.map((b) => (
+            <li key={b.id} className="flex items-center gap-2">
+              {editBonus?.id === b.id ? (
+                <>
+                  <input className="input w-28" value={editBonus.name} onChange={(e) => setEditBonus({ ...editBonus, name: e.target.value })} />
+                  <input className="input flex-1" value={editBonus.description} onChange={(e) => setEditBonus({ ...editBonus, description: e.target.value })} />
+                  <input type="number" className="input w-16" value={editBonus.points} onChange={(e) => setEditBonus({ ...editBonus, points: +e.target.value })} />
+                  <button className="btn btn-emerald px-3 py-1 text-sm" onClick={saveBonus}>保存</button>
+                  <button className="text-sm text-slate-500" onClick={() => setEditBonus(null)}>取消</button>
+                </>
+              ) : (
+                <>
+                  <span>{b.name} <span className="text-amber-600">+{b.points}</span> <span className="text-xs text-slate-500">{b.description}</span></span>
+                  <button className="text-sm text-sky-600" onClick={() => setEditBonus(b)}>编辑</button>
+                  <button className="text-sm text-rose-500" onClick={() => toggle("bonus-items", b.id, "archive")}>归档</button>
+                </>
+              )}
+            </li>
+          ))}
+        </ul>
+        <div className="flex flex-wrap gap-2">
+          <input placeholder="名称" value={bName} onChange={(e) => setBName(e.target.value)} className="input w-28" />
+          <input placeholder="说明" value={bDesc} onChange={(e) => setBDesc(e.target.value)} className="input flex-1" />
+          <input type="number" value={bPoints} onChange={(e) => setBPoints(+e.target.value)} className="input w-16" placeholder="分值" />
+          <button onClick={addBonus} className="btn btn-primary px-3 py-1">添加</button>
+        </div>
+      </section>
+
+      {/* 评分设置 */}
+      <section>
+        <h2 className="mb-2 font-semibold">评分设置</h2>
+        <div className="flex flex-wrap items-center gap-3 text-sm">
+          <label className="flex items-center gap-1">按时加分
+            <input type="number" className="input w-16" value={settings.onTimeBonus} onChange={(e) => setSettings({ ...settings, onTimeBonus: +e.target.value })} />
+          </label>
+          <label className="flex items-center gap-1">错题扣分
+            <input type="number" className="input w-16" value={settings.errorPenalty} onChange={(e) => setSettings({ ...settings, errorPenalty: +e.target.value })} />
+          </label>
+          <label className="flex items-center gap-1">最低分
+            <input type="number" className="input w-16" value={settings.minPoints} onChange={(e) => setSettings({ ...settings, minPoints: +e.target.value })} />
+          </label>
+          <button onClick={saveSettings} className="btn btn-primary px-3 py-1">保存</button>
+        </div>
+        <p className="mt-1 text-xs text-slate-500">得分 = 基础分 + 已勾选加分项 + 按时加分（用时≤模板时长）− 错题数×错题扣分，最低不低于最低分。</p>
+      </section>
+
       {/* 已归档 */}
       <section>
         <h2 className="mb-2 font-semibold text-slate-500">已归档</h2>
@@ -237,7 +310,13 @@ export default function Manage() {
               <button className="text-emerald-600" onClick={() => toggle("rewards", r.id, "restore")}>恢复</button>
             </li>
           ))}
-          {archivedChildren.length + archivedTpls.length + archivedRewards.length === 0 && <li>（暂无已归档项）</li>}
+          {archivedBonus.map((b) => (
+            <li key={`b${b.id}`} className="flex items-center gap-2">
+              <span>⭐ {b.name}</span>
+              <button className="text-emerald-600" onClick={() => toggle("bonus-items", b.id, "restore")}>恢复</button>
+            </li>
+          ))}
+          {archivedChildren.length + archivedTpls.length + archivedRewards.length + archivedBonus.length === 0 && <li>（暂无已归档项）</li>}
         </ul>
       </section>
     </div>

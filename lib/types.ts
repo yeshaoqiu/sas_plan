@@ -34,6 +34,7 @@ export interface TaskInstance {
   startedAt: string | null;
   completedAt: string | null;
   scoredAt: string | null;
+  bonusItemIds: number[];
 }
 
 export interface PointEntry {
@@ -51,4 +52,19 @@ export interface Reward {
   name: string;
   cost: number;
   active: number; // 0/1
+}
+
+export interface BonusItem {
+  id: number;
+  name: string;
+  description: string;
+  points: number;
+  active: number;
+  sortOrder: number;
+}
+
+export interface ScoringSettings {
+  onTimeBonus: number;
+  errorPenalty: number;
+  minPoints: number;
 }

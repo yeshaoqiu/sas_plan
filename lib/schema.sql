@@ -58,3 +58,25 @@ CREATE TABLE IF NOT EXISTS daily_plan (
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_daily_plan_child_template
   ON daily_plan(child_id, template_id);
+
+CREATE TABLE IF NOT EXISTS bonus_items (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL,
+  description TEXT NOT NULL DEFAULT '',
+  points INTEGER NOT NULL,
+  active INTEGER NOT NULL DEFAULT 1,
+  sort_order INTEGER NOT NULL DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS task_bonus (
+  task_instance_id INTEGER NOT NULL REFERENCES task_instances(id),
+  bonus_item_id INTEGER NOT NULL REFERENCES bonus_items(id)
+);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_task_bonus ON task_bonus(task_instance_id, bonus_item_id);
+
+CREATE TABLE IF NOT EXISTS scoring_settings (
+  id INTEGER PRIMARY KEY CHECK (id = 1),
+  on_time_bonus INTEGER NOT NULL DEFAULT 3,
+  error_penalty INTEGER NOT NULL DEFAULT 2,
+  min_points INTEGER NOT NULL DEFAULT 1
+);

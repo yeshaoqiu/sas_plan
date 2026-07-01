@@ -12,12 +12,12 @@ test("getDayProgress counts total/scored and sums points for the day", () => {
   assignTask(db, { childId: c.id, templateId: tpl.id, date: "2026-06-30" }); // unscored
   assignTask(db, { childId: c.id, templateId: tpl.id, date: "2026-06-29" }); // other day
 
-  scoreTask(db, t1.id, { actualMinutes: 5, focused: true, usedScaffold: false, didCheck: false, errorCount: 0 }); // 10 + 5 = 15
+  scoreTask(db, t1.id, { actualMinutes: 5, bonusItemIds: [], errorCount: 0 }); // base 10 + on-time 3 = 13
 
   const p = getDayProgress(db, c.id, "2026-06-30");
   expect(p.total).toBe(2);
   expect(p.scored).toBe(1);
-  expect(p.pointsEarned).toBe(15);
+  expect(p.pointsEarned).toBe(13);
 });
 
 test("getDayProgress is zero for a day with no tasks", () => {

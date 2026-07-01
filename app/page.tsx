@@ -17,6 +17,7 @@ interface Task {
   didCheck: number | null;
   errorCount: number | null;
   note: string | null;
+  bonusItemIds: number[];
 }
 
 function today() {
@@ -75,11 +76,9 @@ export default function Home() {
   const tplSubject = (id: number) => templates.find((t) => t.id === id)?.subject;
   const initialFor = (t: Task) => ({
     actualMinutes: t.actualMinutes ?? 5,
-    focused: !!t.focused,
-    usedScaffold: !!t.usedScaffold,
-    didCheck: !!t.didCheck,
     errorCount: t.errorCount ?? 0,
     note: t.note ?? "",
+    bonusItemIds: t.bonusItemIds ?? [],
   });
 
   return (
@@ -143,6 +142,7 @@ export default function Home() {
                 </div>
                 {scoring === t.id && (
                   <ScoreForm
+                    key={t.id}
                     taskId={t.id}
                     initial={t.status === "scored" ? initialFor(t) : undefined}
                     onDone={() => { setScoring(null); loadTasks(); }}

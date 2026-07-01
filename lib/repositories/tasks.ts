@@ -3,6 +3,7 @@ import type { TaskInstance } from "@/lib/types";
 import { getTemplate } from "@/lib/repositories/templates";
 import { computePoints } from "@/lib/scoring";
 import { addPointEntry } from "@/lib/repositories/points";
+import { getScoringSettings } from "@/lib/repositories/scoringSettings";
 
 interface Row {
   id: number;
@@ -39,6 +40,7 @@ function toTask(r: Row): TaskInstance {
     startedAt: r.started_at,
     completedAt: r.completed_at,
     scoredAt: r.scored_at,
+    bonusItemIds: [],
   };
 }
 
@@ -46,7 +48,10 @@ function getTask(db: Database.Database, id: number): TaskInstance | undefined {
   const r = db.prepare("SELECT * FROM task_instances WHERE id = ?").get(id) as
     | Row
     | undefined;
-  return r ? toTask(r) : undefined;
+  if (!r) return undefined;
+  const task = toTask(r);
+  task.bonusItemIds = listTaskBonus(db, id);
+  return task;
 }
 
 export function assignTask(
@@ -69,7 +74,11 @@ export function listTasks(
   const rows = db
     .prepare("SELECT * FROM task_instances WHERE child_id = ? AND date = ? ORDER BY id")
     .all(childId, date) as Row[];
-  return rows.map(toTask);
+  return rows.map((r) => {
+    const task = toTask(r);
+    task.bonusItemIds = listTaskBonus(db, task.id);
+    return task;
+  });
 }
 
 export function scoreTask(
@@ -77,9 +86,7 @@ export function scoreTask(
   taskId: number,
   result: {
     actualMinutes: number;
-    focused: boolean;
-    usedScaffold: boolean;
-    didCheck: boolean;
+    bonusItemIds: number[];
     errorCount: number;
     note?: string;
     now?: string;
@@ -90,46 +97,54 @@ export function scoreTask(
   const tpl = getTemplate(db, task.templateId);
   if (!tpl) throw new Error("任务模板不存在");
 
-  const wasScored = task.status === "scored";
+  const settings = getScoringSettings(db);
+  const onTimeBonus = result.actualMinutes <= tpl.defaultMinutes ? settings.onTimeBonus : 0;
+
+  let bonusPoints = 0;
+  if (result.bonusItemIds.length > 0) {
+    const placeholders = result.bonusItemIds.map(() => "?").join(",");
+    const row = db
+      .prepare(`SELECT COALESCE(SUM(points), 0) AS s FROM bonus_items WHERE id IN (${placeholders})`)
+      .get(...result.bonusItemIds) as { s: number };
+    bonusPoints = row.s;
+  }
+
   const points = computePoints({
     basePoints: tpl.basePoints,
-    focused: result.focused,
-    usedScaffold: result.usedScaffold,
-    didCheck: result.didCheck,
+    bonusPoints,
+    onTimeBonus,
     errorCount: result.errorCount,
+    errorPenalty: settings.errorPenalty,
+    minPoints: settings.minPoints,
   });
+  const wasScored = task.status === "scored";
   const reason = `完成任务: ${tpl.name}`;
+  const now = result.now ?? new Date().toISOString();
 
   const tx = db.transaction(() => {
     db.prepare(
-      `UPDATE task_instances SET status='scored', actual_minutes=?, focused=?, used_scaffold=?, did_check=?, error_count=?, note=?, points_awarded=?, scored_at=COALESCE(scored_at, ?) WHERE id=?`,
-    ).run(
-      result.actualMinutes,
-      result.focused ? 1 : 0,
-      result.usedScaffold ? 1 : 0,
-      result.didCheck ? 1 : 0,
-      result.errorCount,
-      result.note ?? null,
-      points,
-      result.now ?? new Date().toISOString(),
-      taskId,
-    );
+      `UPDATE task_instances SET status='scored', actual_minutes=?, error_count=?, note=?, points_awarded=?, scored_at=COALESCE(scored_at, ?) WHERE id=?`,
+    ).run(result.actualMinutes, result.errorCount, result.note ?? null, points, now, taskId);
+
+    db.prepare("DELETE FROM task_bonus WHERE task_instance_id = ?").run(taskId);
+    const ins = db.prepare("INSERT INTO task_bonus (task_instance_id, bonus_item_id) VALUES (?, ?)");
+    for (const bid of result.bonusItemIds) ins.run(taskId, bid);
+
     if (wasScored) {
-      db.prepare(
-        "UPDATE point_entries SET delta = ?, reason = ? WHERE task_instance_id = ?",
-      ).run(points, reason, taskId);
+      db.prepare("UPDATE point_entries SET delta = ?, reason = ? WHERE task_instance_id = ?").run(points, reason, taskId);
     } else {
-      addPointEntry(db, {
-        childId: task.childId,
-        delta: points,
-        reason,
-        taskInstanceId: taskId,
-        now: result.now,
-      });
+      addPointEntry(db, { childId: task.childId, delta: points, reason, taskInstanceId: taskId, now });
     }
   });
   tx();
   return getTask(db, taskId)!;
+}
+
+export function listTaskBonus(db: Database.Database, taskId: number): number[] {
+  const rows = db
+    .prepare("SELECT bonus_item_id AS bid FROM task_bonus WHERE task_instance_id = ? ORDER BY bonus_item_id")
+    .all(taskId) as { bid: number }[];
+  return rows.map((r) => r.bid);
 }
 
 export function startTask(
