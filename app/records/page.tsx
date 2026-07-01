@@ -4,7 +4,7 @@ import { Modal } from "../_components/Modal";
 
 interface Child { id: number; name: string; avatar: string }
 interface Template { id: number; name: string }
-interface Task { id: number; templateId: number; status: string; pointsAwarded: number | null; startedAt: string | null; completedAt: string | null; scoredAt: string | null }
+interface Task { id: number; templateId: number; status: string; pointsAwarded: number | null; startedAt: string | null; completedAt: string | null; scoredAt: string | null; bonusItemIds: number[] }
 interface Entry { id: number; delta: number; reason: string; createdAt: string }
 
 function today() {
@@ -26,6 +26,7 @@ export default function Records() {
   const [entries, setEntries] = useState<Entry[]>([]);
   const [showRedemptions, setShowRedemptions] = useState(false);
   const [showLedger, setShowLedger] = useState(false);
+  const [bonusNames, setBonusNames] = useState<Record<number, string>>({});
 
   useEffect(() => {
     fetch("/api/children").then((r) => r.json()).then((c: Child[]) => {
@@ -33,6 +34,11 @@ export default function Records() {
       if (c[0]) setChildId(c[0].id);
     });
     fetch("/api/templates?all=1").then((r) => r.json()).then(setTemplates);
+    fetch("/api/bonus-items?all=1").then((r) => r.json()).then((items: { id: number; name: string }[]) => {
+      const map: Record<number, string> = {};
+      items.forEach((it) => { map[it.id] = it.name; });
+      setBonusNames(map);
+    });
   }, []);
 
   useEffect(() => {
@@ -73,6 +79,13 @@ export default function Records() {
               <div className="mt-1 text-xs text-slate-500">
                 开始 {t.startedAt ? fmt(t.startedAt) : "—"} · 完成 {t.completedAt ? fmt(t.completedAt) : "—"} · 评分 {t.scoredAt ? fmt(t.scoredAt) : "—"}
               </div>
+              {t.bonusItemIds.length > 0 && (
+                <div className="mt-1 flex flex-wrap gap-1">
+                  {t.bonusItemIds.map((bid) => (
+                    <span key={bid} className="chip bg-violet-100 text-violet-700">{bonusNames[bid] ?? "加分项"}</span>
+                  ))}
+                </div>
+              )}
             </li>
           ))}
           {tasks.length === 0 && <li className="text-slate-500">这一天没有任务。</li>}
