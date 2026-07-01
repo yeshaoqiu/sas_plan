@@ -17,6 +17,9 @@ interface Row {
   error_count: number | null;
   note: string | null;
   points_awarded: number | null;
+  started_at: string | null;
+  completed_at: string | null;
+  scored_at: string | null;
 }
 
 function toTask(r: Row): TaskInstance {
@@ -33,6 +36,9 @@ function toTask(r: Row): TaskInstance {
     errorCount: r.error_count,
     note: r.note,
     pointsAwarded: r.points_awarded,
+    startedAt: r.started_at,
+    completedAt: r.completed_at,
+    scoredAt: r.scored_at,
   };
 }
 
@@ -96,7 +102,7 @@ export function scoreTask(
 
   const tx = db.transaction(() => {
     db.prepare(
-      `UPDATE task_instances SET status='scored', actual_minutes=?, focused=?, used_scaffold=?, did_check=?, error_count=?, note=?, points_awarded=? WHERE id=?`,
+      `UPDATE task_instances SET status='scored', actual_minutes=?, focused=?, used_scaffold=?, did_check=?, error_count=?, note=?, points_awarded=?, scored_at=COALESCE(scored_at, ?) WHERE id=?`,
     ).run(
       result.actualMinutes,
       result.focused ? 1 : 0,
@@ -105,6 +111,7 @@ export function scoreTask(
       result.errorCount,
       result.note ?? null,
       points,
+      result.now ?? new Date().toISOString(),
       taskId,
     );
     if (wasScored) {
@@ -122,6 +129,30 @@ export function scoreTask(
     }
   });
   tx();
+  return getTask(db, taskId)!;
+}
+
+export function startTask(
+  db: Database.Database,
+  taskId: number,
+  now?: string,
+): TaskInstance {
+  const ts = now ?? new Date().toISOString();
+  db.prepare(
+    "UPDATE task_instances SET started_at = ?, status = 'in_progress' WHERE id = ?",
+  ).run(ts, taskId);
+  return getTask(db, taskId)!;
+}
+
+export function completeTask(
+  db: Database.Database,
+  taskId: number,
+  now?: string,
+): TaskInstance {
+  const ts = now ?? new Date().toISOString();
+  db.prepare(
+    "UPDATE task_instances SET completed_at = ?, status = 'done' WHERE id = ?",
+  ).run(ts, taskId);
   return getTask(db, taskId)!;
 }
 
@@ -146,4 +177,25 @@ export function getDayProgress(
       .get(childId, date) as { s: number }
   ).s;
   return { total, scored, pointsEarned };
+}
+
+export function ensureDailyTasks(
+  db: Database.Database,
+  childId: number,
+  date: string,
+): TaskInstance[] {
+  const existing = listTasks(db, childId, date);
+  if (existing.length > 0) return existing;
+  const rows = db
+    .prepare(
+      `SELECT dp.template_id AS tid FROM daily_plan dp
+       JOIN task_templates t ON t.id = dp.template_id
+       WHERE dp.child_id = ? AND t.archived = 0
+       ORDER BY dp.id`,
+    )
+    .all(childId) as { tid: number }[];
+  for (const r of rows) {
+    assignTask(db, { childId, templateId: r.tid, date });
+  }
+  return listTasks(db, childId, date);
 }

@@ -27,7 +27,10 @@ CREATE TABLE IF NOT EXISTS task_instances (
   did_check INTEGER,
   error_count INTEGER,
   note TEXT,
-  points_awarded INTEGER
+  points_awarded INTEGER,
+  started_at TEXT,
+  completed_at TEXT,
+  scored_at TEXT
 );
 
 CREATE TABLE IF NOT EXISTS point_entries (
@@ -46,3 +49,12 @@ CREATE TABLE IF NOT EXISTS rewards (
   cost INTEGER NOT NULL,
   active INTEGER NOT NULL DEFAULT 1
 );
+
+CREATE TABLE IF NOT EXISTS daily_plan (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  child_id INTEGER NOT NULL REFERENCES children(id),
+  template_id INTEGER NOT NULL REFERENCES task_templates(id)
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_daily_plan_child_template
+  ON daily_plan(child_id, template_id);

@@ -43,6 +43,12 @@ export default function Home() {
 
   async function loadTasks() {
     if (!childId) return;
+    if (date >= today()) {
+      await fetch(`/api/children/${childId}/ensure-day`, {
+        method: "POST",
+        body: JSON.stringify({ date }),
+      });
+    }
     const t = await fetch(`/api/tasks?childId=${childId}&date=${date}`).then((r) => r.json());
     setTasks(t);
     const p = await fetch(`/api/children/${childId}/progress?date=${date}`).then((r) => r.json());
@@ -53,6 +59,15 @@ export default function Home() {
   async function assign(templateId: number) {
     const res = await fetch("/api/tasks", { method: "POST", body: JSON.stringify({ childId, templateId, date }) });
     if (!res.ok) { alert((await res.json()).error); return; }
+    loadTasks();
+  }
+
+  async function startTaskAction(id: number) {
+    await fetch(`/api/tasks/${id}/start`, { method: "POST" });
+    loadTasks();
+  }
+  async function completeTaskAction(id: number) {
+    await fetch(`/api/tasks/${id}/complete`, { method: "POST" });
     loadTasks();
   }
 
@@ -110,13 +125,20 @@ export default function Home() {
                     <span className={`h-3 w-3 rounded-full ${subj ? SUBJECT_META[subj].dot : "bg-slate-300"}`} />
                     {tplName(t.templateId)}
                   </span>
-                  {t.status === "scored" ? (
+                  {t.status === "pending" && (
+                    <button onClick={() => startTaskAction(t.id)} className="btn btn-sky px-3 py-1 text-sm">开始</button>
+                  )}
+                  {t.status === "in_progress" && (
+                    <button onClick={() => completeTaskAction(t.id)} className="btn btn-emerald px-3 py-1 text-sm">完成</button>
+                  )}
+                  {t.status === "done" && (
+                    <button onClick={() => setScoring(scoring === t.id ? null : t.id)} className="btn btn-primary px-3 py-1 text-sm">评分</button>
+                  )}
+                  {t.status === "scored" && (
                     <span className="flex items-center gap-2">
                       <span className="chip bg-emerald-100 text-emerald-700">🎉 已评分 +{t.pointsAwarded}</span>
                       <button onClick={() => setScoring(scoring === t.id ? null : t.id)} className="btn btn-sky px-3 py-1 text-sm">查看/修改</button>
                     </span>
-                  ) : (
-                    <button onClick={() => setScoring(scoring === t.id ? null : t.id)} className="btn btn-primary px-3 py-1 text-sm">评分</button>
                   )}
                 </div>
                 {scoring === t.id && (

@@ -56,3 +56,13 @@ test("re-scoring updates points and balance without adding a new entry", () => {
   expect(getBalance(db, child.id)).toBe(15);
   expect(listEntries(db, child.id).length).toBe(entryCountBefore); // no new entry added
 });
+
+test("scoreTask records scored_at on first score and preserves it on re-score", () => {
+  const { db, child, tpl } = setup();
+  const t = assignTask(db, { childId: child.id, templateId: tpl.id, date: "2026-07-01" });
+  const first = scoreTask(db, t.id, { actualMinutes: 5, focused: false, usedScaffold: false, didCheck: false, errorCount: 0, now: "2026-07-01T09:00:00.000Z" });
+  expect(first.scoredAt).toBe("2026-07-01T09:00:00.000Z");
+  const again = scoreTask(db, t.id, { actualMinutes: 6, focused: true, usedScaffold: false, didCheck: false, errorCount: 0, now: "2026-07-01T10:00:00.000Z" });
+  expect(again.scoredAt).toBe("2026-07-01T09:00:00.000Z"); // preserved
+  expect(again.pointsAwarded).toBe(15); // re-score still updates points
+});

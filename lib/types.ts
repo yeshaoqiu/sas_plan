@@ -1,5 +1,5 @@
 export type Subject = "writing" | "picture_composition" | "math" | "other";
-export type TaskStatus = "pending" | "done" | "scored";
+export type TaskStatus = "pending" | "in_progress" | "done" | "scored";
 
 export interface Child {
   id: number;
@@ -31,6 +31,9 @@ export interface TaskInstance {
   errorCount: number | null;
   note: string | null;
   pointsAwarded: number | null;
+  startedAt: string | null;
+  completedAt: string | null;
+  scoredAt: string | null;
 }
 
 export interface PointEntry {
