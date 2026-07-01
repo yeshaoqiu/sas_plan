@@ -67,6 +67,15 @@ export function listEntries(db: Database.Database, childId: number): PointEntry[
   return rows.map(toEntry);
 }
 
+export function getLifetimeEarned(db: Database.Database, childId: number): number {
+  const row = db
+    .prepare(
+      "SELECT COALESCE(SUM(delta), 0) AS s FROM point_entries WHERE child_id = ? AND delta > 0",
+    )
+    .get(childId) as { s: number };
+  return row.s;
+}
+
 export function listRedemptions(
   db: Database.Database,
   childId: number,
