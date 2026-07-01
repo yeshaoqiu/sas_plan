@@ -40,6 +40,26 @@ export function runMigrations(db: Database.Database): void {
   }
 }
 
+export function seedDefaults(db: Database.Database): void {
+  const bonusCount = (
+    db.prepare("SELECT COUNT(*) AS n FROM bonus_items").get() as { n: number }
+  ).n;
+  if (bonusCount === 0) {
+    const ins = db.prepare(
+      "INSERT INTO bonus_items (name, description, points, active, sort_order) VALUES (?, ?, ?, 1, ?)",
+    );
+    ins.run("专注完成", "这次做题没分心、专注做完（尤其写字）。", 5, 0);
+    ins.run("用上支架", "看图写话用上了结构支架（谁/在哪/做什么/怎么样/心情）。", 5, 1);
+    ins.run("做了检查", "做完后做了复核/检查这一步。", 5, 2);
+  }
+  const hasSettings = db.prepare("SELECT 1 FROM scoring_settings WHERE id = 1").get();
+  if (!hasSettings) {
+    db.prepare(
+      "INSERT INTO scoring_settings (id, on_time_bonus, error_penalty, min_points) VALUES (1, 3, 2, 1)",
+    ).run();
+  }
+}
+
 export function createDb(filename: string): Database.Database {
   if (filename !== ":memory:") {
     fs.mkdirSync(path.dirname(filename), { recursive: true });
@@ -53,6 +73,7 @@ export function createDb(filename: string): Database.Database {
   );
   db.exec(schema);
   runMigrations(db);
+  seedDefaults(db);
   return db;
 }
 
