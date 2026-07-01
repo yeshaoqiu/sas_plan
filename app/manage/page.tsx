@@ -9,6 +9,14 @@ const SUBJECTS = [
   { value: "other", label: "其他" },
 ];
 
+const TABS = [
+  { key: "children", label: "孩子" },
+  { key: "tasks", label: "任务" },
+  { key: "rewards", label: "奖励" },
+  { key: "scoring", label: "评分" },
+  { key: "archived", label: "已归档" },
+] as const;
+
 interface ChildRow { id: number; name: string; grade: number; avatar: string; archived: number }
 interface TplRow { id: number; name: string; subject: string; defaultMinutes: number; basePoints: number; archived: number }
 interface RewardRow { id: number; name: string; cost: number; active: number }
@@ -32,6 +40,7 @@ export default function Manage() {
   const [editBonus, setEditBonus] = useState<BonusRow | null>(null);
   const [bName, setBName] = useState(""); const [bDesc, setBDesc] = useState(""); const [bPoints, setBPoints] = useState(5);
   const [plans, setPlans] = useState<Record<number, number[]>>({});
+  const [tab, setTab] = useState<"children" | "tasks" | "rewards" | "scoring" | "archived">("children");
 
   function reload() {
     fetch("/api/children?all=1").then((r) => r.json()).then(setChildren);
@@ -116,7 +125,20 @@ export default function Manage() {
 
   return (
     <div className="space-y-8">
+      <div className="flex flex-wrap gap-1">
+        {TABS.map((t) => (
+          <button
+            key={t.key}
+            onClick={() => setTab(t.key)}
+            className={`rounded-full px-3 py-1.5 text-sm font-medium ${tab === t.key ? "bg-amber-500 text-white" : "hover:bg-amber-100"}`}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+
       {/* 孩子 */}
+      {tab === "children" && (
       <section>
         <h2 className="mb-2 font-semibold">孩子</h2>
         <ul className="mb-2 space-y-1">
@@ -146,8 +168,10 @@ export default function Manage() {
           <button onClick={addChild} className="btn btn-primary px-3 py-1">添加</button>
         </div>
       </section>
+      )}
 
       {/* 任务模板 */}
+      {tab === "tasks" && (
       <section>
         <h2 className="mb-2 font-semibold">任务模板</h2>
         <ul className="mb-2 space-y-1">
@@ -185,8 +209,10 @@ export default function Manage() {
           <button onClick={addTemplate} className="btn btn-primary px-3 py-1">添加</button>
         </div>
       </section>
+      )}
 
       {/* 奖励 */}
+      {tab === "rewards" && (
       <section>
         <h2 className="mb-2 font-semibold">奖励</h2>
         <ul className="mb-2 space-y-1">
@@ -215,8 +241,10 @@ export default function Manage() {
           <button onClick={addReward} className="btn btn-primary px-3 py-1">新增奖励</button>
         </div>
       </section>
+      )}
 
       {/* 每日计划 */}
+      {tab === "tasks" && (
       <section>
         <h2 className="mb-2 font-semibold">每日计划（打开应用自动派发当天）</h2>
         {activeChildren.map((c) => (
@@ -237,8 +265,10 @@ export default function Manage() {
           </div>
         ))}
       </section>
+      )}
 
       {/* 加分项 */}
+      {tab === "scoring" && (
       <section>
         <h2 className="mb-2 font-semibold">加分项（评分时可勾选）</h2>
         <ul className="mb-2 space-y-1">
@@ -269,8 +299,10 @@ export default function Manage() {
           <button onClick={addBonus} className="btn btn-primary px-3 py-1">添加</button>
         </div>
       </section>
+      )}
 
       {/* 评分设置 */}
+      {tab === "scoring" && (
       <section>
         <h2 className="mb-2 font-semibold">评分设置</h2>
         <div className="flex flex-wrap items-center gap-3 text-sm">
@@ -287,8 +319,10 @@ export default function Manage() {
         </div>
         <p className="mt-1 text-xs text-slate-500">得分 = 基础分 + 已勾选加分项 + 按时加分（用时≤模板时长）− 错题数×错题扣分，最低不低于最低分。</p>
       </section>
+      )}
 
       {/* 已归档 */}
+      {tab === "archived" && (
       <section>
         <h2 className="mb-2 font-semibold text-slate-500">已归档</h2>
         <ul className="space-y-1 text-sm text-slate-500">
@@ -319,6 +353,7 @@ export default function Manage() {
           {archivedChildren.length + archivedTpls.length + archivedRewards.length + archivedBonus.length === 0 && <li>（暂无已归档项）</li>}
         </ul>
       </section>
+      )}
     </div>
   );
 }
