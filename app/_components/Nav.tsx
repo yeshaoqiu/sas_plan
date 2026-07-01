@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 const LINKS = [
   { href: "/", label: "今日清单" },
   { href: "/rewards", label: "奖励商店" },
+  { href: "/growth", label: "成长" },
   { href: "/records", label: "记录" },
   { href: "/manage", label: "管理" },
 ];
