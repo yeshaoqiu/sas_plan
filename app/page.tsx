@@ -142,6 +142,7 @@ export default function Home() {
                 </div>
                 {scoring === t.id && (
                   <ScoreForm
+                    key={t.id}
                     taskId={t.id}
                     initial={t.status === "scored" ? initialFor(t) : undefined}
                     onDone={() => { setScoring(null); loadTasks(); }}
