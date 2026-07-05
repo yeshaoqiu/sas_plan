@@ -6,9 +6,11 @@ export function createReward(
   db: DB,
   input: { name: string; cost: number },
 ): Reward {
+  const name = (input.name ?? "").trim();
+  if (!name) throw new Error("请填写奖励名");
   const info = db
     .prepare("INSERT INTO rewards (name, cost, active) VALUES (?, ?, 1)")
-    .run(input.name, input.cost);
+    .run(name, input.cost);
   return db
     .prepare("SELECT * FROM rewards WHERE id = ?")
     .get(Number(info.lastInsertRowid)) as Reward;

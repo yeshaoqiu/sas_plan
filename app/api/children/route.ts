@@ -10,10 +10,14 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   const body = await req.json();
-  const child = createChild(getDb(), {
-    name: body.name,
-    grade: Number(body.grade),
-    avatar: body.avatar,
-  });
-  return NextResponse.json(child);
+  try {
+    const child = createChild(getDb(), {
+      name: body.name,
+      grade: Number(body.grade),
+      avatar: body.avatar,
+    });
+    return NextResponse.json(child);
+  } catch (e) {
+    return NextResponse.json({ error: (e as Error).message }, { status: 400 });
+  }
 }

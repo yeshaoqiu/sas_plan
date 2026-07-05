@@ -44,11 +44,13 @@ export function createBonusItem(
   db: DB,
   input: { name: string; description?: string; points: number; sortOrder?: number },
 ): BonusItem {
+  const name = (input.name ?? "").trim();
+  if (!name) throw new Error("请填写加分项名称");
   const info = db
     .prepare(
       "INSERT INTO bonus_items (name, description, points, active, sort_order) VALUES (?, ?, ?, 1, ?)",
     )
-    .run(input.name, input.description ?? "", input.points, input.sortOrder ?? 0);
+    .run(name, input.description ?? "", input.points, input.sortOrder ?? 0);
   return getBonusItem(db, Number(info.lastInsertRowid))!;
 }
 

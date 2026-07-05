@@ -5,9 +5,11 @@ export function createChild(
   db: DB,
   input: { name: string; grade: number; avatar?: string },
 ): Child {
+  const name = (input.name ?? "").trim();
+  if (!name) throw new Error("请填写孩子姓名");
   const info = db
     .prepare("INSERT INTO children (name, grade, avatar) VALUES (?, ?, ?)")
-    .run(input.name, input.grade, input.avatar ?? "🐣");
+    .run(name, input.grade, input.avatar ?? "🐣");
   return getChild(db, Number(info.lastInsertRowid))!;
 }
 

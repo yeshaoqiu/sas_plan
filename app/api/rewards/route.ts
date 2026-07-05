@@ -10,6 +10,10 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   const body = await req.json();
-  const reward = createReward(getDb(), { name: body.name, cost: Number(body.cost) });
-  return NextResponse.json(reward);
+  try {
+    const reward = createReward(getDb(), { name: body.name, cost: Number(body.cost) });
+    return NextResponse.json(reward);
+  } catch (e) {
+    return NextResponse.json({ error: (e as Error).message }, { status: 400 });
+  }
 }

@@ -6,7 +6,7 @@ import { shiftDate, todayStr } from "./_components/dateNav";
 import type { Subject } from "@/lib/types";
 
 interface Child { id: number; name: string; avatar: string }
-interface Template { id: number; name: string; subject: Subject }
+interface Template { id: number; name: string; subject: Subject; defaultMinutes: number }
 interface Task {
   id: number;
   templateId: number;
@@ -19,6 +19,8 @@ interface Task {
   errorCount: number | null;
   note: string | null;
   bonusItemIds: number[];
+  startedAt: string | null;
+  completedAt: string | null;
 }
 
 function today() {
@@ -176,6 +178,9 @@ export default function Home() {
                     key={t.id}
                     taskId={t.id}
                     initial={t.status === "scored" ? initialFor(t) : undefined}
+                    startedAt={t.startedAt}
+                    completedAt={t.completedAt}
+                    limitMinutes={templates.find((x) => x.id === t.templateId)?.defaultMinutes ?? null}
                     onDone={() => { setScoring(null); loadTasks(); }}
                   />
                 )}

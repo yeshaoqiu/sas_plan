@@ -25,11 +25,13 @@ export function createTemplate(
   db: DB,
   input: { name: string; subject: Subject; defaultMinutes: number; basePoints: number },
 ): TaskTemplate {
+  const name = (input.name ?? "").trim();
+  if (!name) throw new Error("请填写任务名");
   const info = db
     .prepare(
       "INSERT INTO task_templates (name, subject, default_minutes, base_points) VALUES (?, ?, ?, ?)",
     )
-    .run(input.name, input.subject, input.defaultMinutes, input.basePoints);
+    .run(name, input.subject, input.defaultMinutes, input.basePoints);
   return getTemplate(db, Number(info.lastInsertRowid))!;
 }
 

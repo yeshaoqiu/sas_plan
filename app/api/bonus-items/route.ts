@@ -10,11 +10,15 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   const body = await req.json();
-  const item = createBonusItem(getDb(), {
-    name: body.name,
-    description: body.description,
-    points: Number(body.points),
-    sortOrder: body.sortOrder === undefined ? undefined : Number(body.sortOrder),
-  });
-  return NextResponse.json(item);
+  try {
+    const item = createBonusItem(getDb(), {
+      name: body.name,
+      description: body.description,
+      points: Number(body.points),
+      sortOrder: body.sortOrder === undefined ? undefined : Number(body.sortOrder),
+    });
+    return NextResponse.json(item);
+  } catch (e) {
+    return NextResponse.json({ error: (e as Error).message }, { status: 400 });
+  }
 }

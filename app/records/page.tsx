@@ -14,7 +14,11 @@ function today() {
 }
 
 function fmt(ts: string) {
-  return ts.slice(0, 16).replace("T", " ");
+  // 后端存的是 UTC(ISO)，按本地时区显示为 MM-DD HH:mm
+  const d = new Date(ts);
+  if (isNaN(d.getTime())) return ts.slice(5, 16).replace("T", " ");
+  const p = (n: number) => String(n).padStart(2, "0");
+  return `${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
 }
 
 export default function Records() {
@@ -107,9 +111,12 @@ export default function Records() {
       <Modal open={showRedemptions} title="兑换历史" onClose={() => setShowRedemptions(false)}>
         <ul className="space-y-2">
           {redemptions.map((e) => (
-            <li key={e.id} className="flex items-center justify-between gap-3 rounded-lg bg-slate-50 px-3 py-2">
-              <span>{e.reason}</span>
-              <span className="whitespace-nowrap text-rose-500">{e.delta}⭐ · {fmt(e.createdAt)}</span>
+            <li key={e.id} className="flex items-start justify-between gap-3 rounded-lg bg-slate-50 px-3 py-2">
+              <span className="min-w-0 flex-1">{e.reason}</span>
+              <span className="flex shrink-0 flex-col items-end text-right">
+                <span className="whitespace-nowrap font-semibold text-rose-500">{e.delta}⭐</span>
+                <span className="whitespace-nowrap text-xs text-slate-400">{fmt(e.createdAt)}</span>
+              </span>
             </li>
           ))}
           {redemptions.length === 0 && <li className="text-slate-500">还没有兑换记录。</li>}
@@ -119,10 +126,13 @@ export default function Records() {
       <Modal open={showLedger} title="积分流水" onClose={() => setShowLedger(false)}>
         <ul className="space-y-1 text-sm">
           {entries.map((e) => (
-            <li key={e.id} className="flex items-center justify-between gap-3 rounded-lg bg-slate-50 px-3 py-2">
-              <span>{e.reason}</span>
-              <span className={`whitespace-nowrap ${e.delta >= 0 ? "text-emerald-600" : "text-rose-500"}`}>
-                {e.delta >= 0 ? `+${e.delta}` : e.delta}⭐ · {fmt(e.createdAt)}
+            <li key={e.id} className="flex items-start justify-between gap-3 rounded-lg bg-slate-50 px-3 py-2">
+              <span className="min-w-0 flex-1">{e.reason}</span>
+              <span className="flex shrink-0 flex-col items-end text-right">
+                <span className={`whitespace-nowrap font-semibold ${e.delta >= 0 ? "text-emerald-600" : "text-rose-500"}`}>
+                  {e.delta >= 0 ? `+${e.delta}` : e.delta}⭐
+                </span>
+                <span className="whitespace-nowrap text-xs text-slate-400">{fmt(e.createdAt)}</span>
               </span>
             </li>
           ))}

@@ -10,11 +10,15 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   const body = await req.json();
-  const tpl = createTemplate(getDb(), {
-    name: body.name,
-    subject: body.subject,
-    defaultMinutes: Number(body.defaultMinutes),
-    basePoints: Number(body.basePoints),
-  });
-  return NextResponse.json(tpl);
+  try {
+    const tpl = createTemplate(getDb(), {
+      name: body.name,
+      subject: body.subject,
+      defaultMinutes: Number(body.defaultMinutes),
+      basePoints: Number(body.basePoints),
+    });
+    return NextResponse.json(tpl);
+  } catch (e) {
+    return NextResponse.json({ error: (e as Error).message }, { status: 400 });
+  }
 }

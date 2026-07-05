@@ -69,7 +69,9 @@ export default function Manage() {
   useEffect(reload, []);
 
   async function addChild() {
-    await fetch("/api/children", { method: "POST", body: JSON.stringify({ name: cName, grade: cGrade }) });
+    if (!cName.trim()) { alert("请填写孩子姓名"); return; }
+    const res = await fetch("/api/children", { method: "POST", body: JSON.stringify({ name: cName, grade: cGrade }) });
+    if (!res.ok) { alert((await res.json()).error); return; }
     setCName(""); reload();
   }
   async function saveChild() {
@@ -78,7 +80,9 @@ export default function Manage() {
     setEditChild(null); reload();
   }
   async function addTemplate() {
-    await fetch("/api/templates", { method: "POST", body: JSON.stringify({ name: tName, subject: tSubject, defaultMinutes: tMinutes, basePoints: tPoints }) });
+    if (!tName.trim()) { alert("请填写任务名"); return; }
+    const res = await fetch("/api/templates", { method: "POST", body: JSON.stringify({ name: tName, subject: tSubject, defaultMinutes: tMinutes, basePoints: tPoints }) });
+    if (!res.ok) { alert((await res.json()).error); return; }
     setTName(""); reload();
   }
   async function saveTpl() {
@@ -87,7 +91,9 @@ export default function Manage() {
     setEditTpl(null); reload();
   }
   async function addReward() {
-    await fetch("/api/rewards", { method: "POST", body: JSON.stringify({ name: rName, cost: rCost }) });
+    if (!rName.trim()) { alert("请填写奖励名"); return; }
+    const res = await fetch("/api/rewards", { method: "POST", body: JSON.stringify({ name: rName, cost: rCost }) });
+    if (!res.ok) { alert((await res.json()).error); return; }
     setRName(""); reload();
   }
   async function saveReward() {
@@ -96,7 +102,9 @@ export default function Manage() {
     setEditReward(null); reload();
   }
   async function addBonus() {
-    await fetch("/api/bonus-items", { method: "POST", body: JSON.stringify({ name: bName, description: bDesc, points: bPoints, sortOrder: activeBonus.length }) });
+    if (!bName.trim()) { alert("请填写加分项名称"); return; }
+    const res = await fetch("/api/bonus-items", { method: "POST", body: JSON.stringify({ name: bName, description: bDesc, points: bPoints, sortOrder: activeBonus.length }) });
+    if (!res.ok) { alert((await res.json()).error); return; }
     setBName(""); setBDesc(""); reload();
   }
   async function saveBonus() {
@@ -185,7 +193,9 @@ export default function Manage() {
               {editChild?.id === c.id ? (
                 <>
                   <input className="input w-28" value={editChild.name} onChange={(e) => setEditChild({ ...editChild, name: e.target.value })} />
-                  <input type="number" className="input w-16" value={editChild.grade} onChange={(e) => setEditChild({ ...editChild, grade: +e.target.value })} />
+                  <label className="inline-flex items-center gap-1 text-sm text-slate-600">
+                    <input type="number" className="input w-16" value={editChild.grade} onChange={(e) => setEditChild({ ...editChild, grade: +e.target.value })} />年级
+                  </label>
                   <input className="input w-16" value={editChild.avatar} onChange={(e) => setEditChild({ ...editChild, avatar: e.target.value })} />
                   <button className="btn btn-emerald px-3 py-1 text-sm" onClick={saveChild}>保存</button>
                   <button className="text-sm text-slate-500" onClick={() => setEditChild(null)}>取消</button>
@@ -202,10 +212,12 @@ export default function Manage() {
             </li>
           ))}
         </ul>
-        <div className="flex gap-2">
-          <input placeholder="姓名" value={cName} onChange={(e) => setCName(e.target.value)} className="input" />
-          <input type="number" value={cGrade} onChange={(e) => setCGrade(+e.target.value)} className="input w-16" />
-          <button onClick={addChild} className="btn btn-primary px-3 py-1">添加</button>
+        <div className="flex flex-wrap gap-2">
+          <input placeholder="姓名" value={cName} onChange={(e) => setCName(e.target.value)} className="input min-w-0 flex-1" />
+          <label className="inline-flex items-center gap-1 text-sm text-slate-600">
+            <input type="number" value={cGrade} onChange={(e) => setCGrade(+e.target.value)} className="input w-16" />年级
+          </label>
+          <button onClick={addChild} disabled={!cName.trim()} className="btn btn-primary shrink-0 whitespace-nowrap px-3 py-1">添加</button>
         </div>
       </section>
       )}
@@ -223,8 +235,12 @@ export default function Manage() {
                   <select className="input" value={editTpl.subject} onChange={(e) => setEditTpl({ ...editTpl, subject: e.target.value })}>
                     {SUBJECTS.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
                   </select>
-                  <input type="number" className="input w-16" value={editTpl.defaultMinutes} onChange={(e) => setEditTpl({ ...editTpl, defaultMinutes: +e.target.value })} />
-                  <input type="number" className="input w-16" value={editTpl.basePoints} onChange={(e) => setEditTpl({ ...editTpl, basePoints: +e.target.value })} />
+                  <label className="inline-flex items-center gap-1 text-sm text-slate-600">
+                    <input type="number" className="input w-16" value={editTpl.defaultMinutes} onChange={(e) => setEditTpl({ ...editTpl, defaultMinutes: +e.target.value })} />分钟
+                  </label>
+                  <label className="inline-flex items-center gap-1 text-sm text-slate-600">
+                    <input type="number" className="input w-16" value={editTpl.basePoints} onChange={(e) => setEditTpl({ ...editTpl, basePoints: +e.target.value })} />分
+                  </label>
                   <button className="btn btn-emerald px-3 py-1 text-sm" onClick={saveTpl}>保存</button>
                   <button className="text-sm text-slate-500" onClick={() => setEditTpl(null)}>取消</button>
                 </>
@@ -248,9 +264,13 @@ export default function Manage() {
           <select value={tSubject} onChange={(e) => setTSubject(e.target.value)} className="input">
             {SUBJECTS.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
           </select>
-          <input type="number" value={tMinutes} onChange={(e) => setTMinutes(+e.target.value)} className="input w-20" placeholder="分钟" />
-          <input type="number" value={tPoints} onChange={(e) => setTPoints(+e.target.value)} className="input w-20" placeholder="基础分" />
-          <button onClick={addTemplate} className="btn btn-primary px-3 py-1">添加</button>
+          <label className="inline-flex items-center gap-1 text-sm text-slate-600">
+            <input type="number" value={tMinutes} onChange={(e) => setTMinutes(+e.target.value)} className="input w-20" placeholder="分钟" />分钟
+          </label>
+          <label className="inline-flex items-center gap-1 text-sm text-slate-600">
+            <input type="number" value={tPoints} onChange={(e) => setTPoints(+e.target.value)} className="input w-20" placeholder="基础分" />分
+          </label>
+          <button onClick={addTemplate} disabled={!tName.trim()} className="btn btn-primary shrink-0 whitespace-nowrap px-3 py-1">添加</button>
         </div>
       </section>
       )}
@@ -265,7 +285,9 @@ export default function Manage() {
               {editReward?.id === r.id ? (
                 <>
                   <input className="input w-40" value={editReward.name} onChange={(e) => setEditReward({ ...editReward, name: e.target.value })} />
-                  <input type="number" className="input w-20" value={editReward.cost} onChange={(e) => setEditReward({ ...editReward, cost: +e.target.value })} />
+                  <label className="inline-flex items-center gap-1 text-sm text-slate-600">
+                    <input type="number" className="input w-20" value={editReward.cost} onChange={(e) => setEditReward({ ...editReward, cost: +e.target.value })} />分
+                  </label>
                   <button className="btn btn-emerald px-3 py-1 text-sm" onClick={saveReward}>保存</button>
                   <button className="text-sm text-slate-500" onClick={() => setEditReward(null)}>取消</button>
                 </>
@@ -281,10 +303,12 @@ export default function Manage() {
             </li>
           ))}
         </ul>
-        <div className="flex gap-2">
-          <input placeholder="奖励名" value={rName} onChange={(e) => setRName(e.target.value)} className="input" />
-          <input type="number" value={rCost} onChange={(e) => setRCost(+e.target.value)} className="input w-24" />
-          <button onClick={addReward} className="btn btn-primary px-3 py-1">新增奖励</button>
+        <div className="flex flex-wrap gap-2">
+          <input placeholder="奖励名" value={rName} onChange={(e) => setRName(e.target.value)} className="input min-w-0 flex-1" />
+          <label className="inline-flex items-center gap-1 text-sm text-slate-600">
+            <input type="number" value={rCost} onChange={(e) => setRCost(+e.target.value)} className="input w-24" />分
+          </label>
+          <button onClick={addReward} disabled={!rName.trim()} className="btn btn-primary shrink-0 whitespace-nowrap px-3 py-1">新增奖励</button>
         </div>
       </section>
       )}
@@ -397,7 +421,9 @@ export default function Manage() {
                 <>
                   <input className="input w-28" value={editBonus.name} onChange={(e) => setEditBonus({ ...editBonus, name: e.target.value })} />
                   <input className="input flex-1" value={editBonus.description} onChange={(e) => setEditBonus({ ...editBonus, description: e.target.value })} />
-                  <input type="number" className="input w-16" value={editBonus.points} onChange={(e) => setEditBonus({ ...editBonus, points: +e.target.value })} />
+                  <label className="inline-flex items-center gap-1 text-sm text-slate-600">
+                    <input type="number" className="input w-16" value={editBonus.points} onChange={(e) => setEditBonus({ ...editBonus, points: +e.target.value })} />分
+                  </label>
                   <button className="btn btn-emerald px-3 py-1 text-sm" onClick={saveBonus}>保存</button>
                   <button className="text-sm text-slate-500" onClick={() => setEditBonus(null)}>取消</button>
                 </>
@@ -416,8 +442,10 @@ export default function Manage() {
         <div className="flex flex-wrap gap-2">
           <input placeholder="名称" value={bName} onChange={(e) => setBName(e.target.value)} className="input w-28" />
           <input placeholder="说明" value={bDesc} onChange={(e) => setBDesc(e.target.value)} className="input flex-1" />
-          <input type="number" value={bPoints} onChange={(e) => setBPoints(+e.target.value)} className="input w-16" placeholder="分值" />
-          <button onClick={addBonus} className="btn btn-primary px-3 py-1">添加</button>
+          <label className="inline-flex items-center gap-1 text-sm text-slate-600">
+            <input type="number" value={bPoints} onChange={(e) => setBPoints(+e.target.value)} className="input w-16" placeholder="分值" />分
+          </label>
+          <button onClick={addBonus} disabled={!bName.trim()} className="btn btn-primary shrink-0 whitespace-nowrap px-3 py-1">添加</button>
         </div>
       </section>
       )}
@@ -428,13 +456,13 @@ export default function Manage() {
         <h2 className="mb-2 font-semibold">评分设置</h2>
         <div className="flex flex-wrap items-center gap-3 text-sm">
           <label className="flex items-center gap-1">按时加分
-            <input type="number" className="input w-16" value={settings.onTimeBonus} onChange={(e) => setSettings({ ...settings, onTimeBonus: +e.target.value })} />
+            <input type="number" className="input w-16" value={settings.onTimeBonus} onChange={(e) => setSettings({ ...settings, onTimeBonus: +e.target.value })} />分
           </label>
           <label className="flex items-center gap-1">错题扣分
-            <input type="number" className="input w-16" value={settings.errorPenalty} onChange={(e) => setSettings({ ...settings, errorPenalty: +e.target.value })} />
+            <input type="number" className="input w-16" value={settings.errorPenalty} onChange={(e) => setSettings({ ...settings, errorPenalty: +e.target.value })} />分/题
           </label>
           <label className="flex items-center gap-1">最低分
-            <input type="number" className="input w-16" value={settings.minPoints} onChange={(e) => setSettings({ ...settings, minPoints: +e.target.value })} />
+            <input type="number" className="input w-16" value={settings.minPoints} onChange={(e) => setSettings({ ...settings, minPoints: +e.target.value })} />分
           </label>
           <button onClick={saveSettings} className="btn btn-primary px-3 py-1">保存</button>
         </div>
