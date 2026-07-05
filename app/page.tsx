@@ -142,37 +142,39 @@ export default function Home() {
                 onTouchMove={canDelete ? onPressEnd : undefined}
               >
                 <div className="flex items-center justify-between gap-2">
-                  <span className="flex flex-1 items-center gap-2">
+                  <span className="flex min-w-0 flex-1 items-center gap-2">
                     <span className={`h-3 w-3 shrink-0 rounded-full ${subj ? SUBJECT_META[subj].dot : "bg-slate-300"}`} />
-                    {tplName(t.templateId)}
+                    <span className="min-w-0">{tplName(t.templateId)}</span>
                   </span>
-                  <span className="flex items-center gap-2">
+                  <span className="flex shrink-0 items-center gap-2">
                     {canDelete && (
                       <button
                         onClick={() => removeTask(t.id)}
                         title="删除该任务"
-                        className="hidden text-sm text-rose-500 group-hover:inline sm:inline-block sm:opacity-0 sm:transition-opacity sm:group-hover:opacity-100"
+                        className="hidden whitespace-nowrap text-sm text-rose-500 group-hover:inline sm:inline-block sm:opacity-0 sm:transition-opacity sm:group-hover:opacity-100"
                       >
                         删除
                       </button>
                     )}
                     {t.status === "pending" && (
-                      <button onClick={() => startTaskAction(t.id)} className="btn btn-sky px-3 py-1 text-sm">开始</button>
+                      <button onClick={() => startTaskAction(t.id)} className="btn btn-sky whitespace-nowrap px-3 py-1 text-sm">开始</button>
                     )}
                     {t.status === "in_progress" && (
-                      <button onClick={() => completeTaskAction(t.id)} className="btn btn-emerald px-3 py-1 text-sm">完成</button>
+                      <button onClick={() => completeTaskAction(t.id)} className="btn btn-emerald whitespace-nowrap px-3 py-1 text-sm">完成</button>
                     )}
                     {t.status === "done" && (
-                      <button onClick={() => setScoring(scoring === t.id ? null : t.id)} className="btn btn-primary px-3 py-1 text-sm">评分</button>
+                      <button onClick={() => setScoring(scoring === t.id ? null : t.id)} className="btn btn-primary whitespace-nowrap px-3 py-1 text-sm">评分</button>
                     )}
                     {t.status === "scored" && (
-                      <>
-                        <span className="chip bg-emerald-100 text-emerald-700">🎉 已评分 +{t.pointsAwarded}</span>
-                        <button onClick={() => setScoring(scoring === t.id ? null : t.id)} className="btn btn-sky px-3 py-1 text-sm">查看/修改</button>
-                      </>
+                      <button onClick={() => setScoring(scoring === t.id ? null : t.id)} className="btn btn-sky whitespace-nowrap px-3 py-1 text-sm">查看/修改</button>
                     )}
                   </span>
                 </div>
+                {t.status === "scored" && (
+                  <div className="mt-1">
+                    <span className="chip bg-emerald-100 text-emerald-700">🎉 已评分 +{t.pointsAwarded}</span>
+                  </div>
+                )}
                 {scoring === t.id && (
                   <ScoreForm
                     key={t.id}
