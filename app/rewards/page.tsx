@@ -6,6 +6,7 @@ export default function Rewards() {
   const [childId, setChildId] = useState<number | null>(null);
   const [balance, setBalance] = useState(0);
   const [rewards, setRewards] = useState<any[]>([]);
+  const [qtys, setQtys] = useState<Record<number, number>>({});
 
   useEffect(() => {
     fetch("/api/children").then((r) => r.json()).then((c) => {
@@ -22,9 +23,25 @@ export default function Rewards() {
   }
   useEffect(() => { loadBalance(); }, [childId]);
 
+  const getQty = (id: number) => qtys[id] ?? 1;
+  const setQty = (id: number, v: number) => setQtys((q) => ({ ...q, [id]: v }));
+
   async function redeem(rewardId: number) {
-    const res = await fetch(`/api/rewards/${rewardId}/redeem`, { method: "POST", body: JSON.stringify({ childId }) });
+    const reward = rewards.find((r) => r.id === rewardId);
+    const name = reward?.name ?? "该奖励";
+    const cost = reward?.cost ?? 0;
+    const maxQty = cost > 0 ? Math.floor(balance / cost) : 0;
+    const qty = Math.min(getQty(rewardId), maxQty);
+    if (qty < 1) return;
+    const total = cost * qty;
+    const label = qty > 1 ? `${qty} 次「${name}」（共 ${total}⭐）` : `「${name}」（${total}⭐）`;
+    if (!confirm(`确认兑换 ${label} 吗？兑换后将从积分中扣除。`)) return;
+    const res = await fetch(`/api/rewards/${rewardId}/redeem`, {
+      method: "POST",
+      body: JSON.stringify({ childId, quantity: qty }),
+    });
     if (!res.ok) { alert((await res.json()).error); return; }
+    setQty(rewardId, 1);
     loadBalance();
   }
 
@@ -38,12 +55,38 @@ export default function Rewards() {
       </div>
 
       <ul className="space-y-2">
-        {rewards.map((r) => (
-          <li key={r.id} className="card flex items-center justify-between">
-            <span>{r.name}（{r.cost} 分）</span>
-            <button onClick={() => redeem(r.id)} disabled={balance < r.cost} className="btn btn-rose px-3 py-1">兑换</button>
-          </li>
-        ))}
+        {rewards.map((r) => {
+          const maxQty = r.cost > 0 ? Math.floor(balance / r.cost) : 0;
+          const affordable = maxQty >= 1;
+          const qty = Math.min(Math.max(1, getQty(r.id)), Math.max(1, maxQty));
+          return (
+            <li key={r.id} className="card flex flex-wrap items-center justify-between gap-3">
+              <span className="flex-1">{r.name}（{r.cost} 分）</span>
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => setQty(r.id, Math.max(1, qty - 1))}
+                    disabled={!affordable || qty <= 1}
+                    className="btn btn-sky h-8 w-8 p-0 text-lg"
+                  >－</button>
+                  <span className="w-6 text-center font-semibold">{affordable ? qty : 0}</span>
+                  <button
+                    onClick={() => setQty(r.id, Math.min(maxQty, qty + 1))}
+                    disabled={!affordable || qty >= maxQty}
+                    className="btn btn-sky h-8 w-8 p-0 text-lg"
+                  >＋</button>
+                </div>
+                <button
+                  onClick={() => redeem(r.id)}
+                  disabled={!affordable}
+                  className="btn btn-rose px-3 py-1 text-sm"
+                >
+                  兑换{affordable && qty > 1 ? ` ×${qty}（${r.cost * qty}⭐）` : ""}
+                </button>
+              </div>
+            </li>
+          );
+        })}
         {rewards.length === 0 && <li className="text-slate-500">还没有奖励，去「管理」添加。</li>}
       </ul>
     </div>

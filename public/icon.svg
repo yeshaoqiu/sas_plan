@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <rect width="512" height="512" rx="112" fill="#f59e0b"/>
+  <g transform="translate(256 248)">
+    <!-- 书本 -->
+    <path d="M-150 -70 C -110 -95 -40 -95 0 -70 L 0 90 C -40 65 -110 65 -150 90 Z" fill="#fffbeb"/>
+    <path d="M150 -70 C 110 -95 40 -95 0 -70 L 0 90 C 40 65 110 65 150 90 Z" fill="#fff"/>
+    <path d="M0 -70 L 0 90" stroke="#fcd34d" stroke-width="10" fill="none"/>
+    <path d="M-120 -55 C -90 -70 -45 -70 -18 -55" stroke="#fbbf24" stroke-width="9" fill="none" stroke-linecap="round"/>
+    <path d="M-120 -20 C -90 -35 -45 -35 -18 -20" stroke="#fbbf24" stroke-width="9" fill="none" stroke-linecap="round"/>
+    <path d="M-120 15 C -90 0 -45 0 -18 15" stroke="#fbbf24" stroke-width="9" fill="none" stroke-linecap="round"/>
+  </g>
+  <!-- 星星 -->
+  <path d="M256 30 l 22 46 l 50 6 l -37 35 l 10 50 l -45 -25 l -45 25 l 10 -50 l -37 -35 l 50 -6 Z" fill="#fde68a" transform="scale(0.9) translate(28 20)"/>
+</svg>

@@ -1,6 +1,6 @@
-import type Database from "better-sqlite3";
+import type { DB } from "@/lib/sqlite-compat";
 
-export function listDailyPlan(db: Database.Database, childId: number): number[] {
+export function listDailyPlan(db: DB, childId: number): number[] {
   const rows = db
     .prepare("SELECT template_id AS tid FROM daily_plan WHERE child_id = ? ORDER BY id")
     .all(childId) as { tid: number }[];
@@ -8,7 +8,7 @@ export function listDailyPlan(db: Database.Database, childId: number): number[] 
 }
 
 export function addToDailyPlan(
-  db: Database.Database,
+  db: DB,
   childId: number,
   templateId: number,
 ): void {
@@ -24,7 +24,7 @@ export function addToDailyPlan(
 }
 
 export function removeFromDailyPlan(
-  db: Database.Database,
+  db: DB,
   childId: number,
   templateId: number,
 ): void {

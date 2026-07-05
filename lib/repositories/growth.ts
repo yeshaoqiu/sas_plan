@@ -1,4 +1,4 @@
-import type Database from "better-sqlite3";
+import type { DB } from "@/lib/sqlite-compat";
 
 function prevDay(date: string): string {
   const dt = new Date(date + "T00:00:00Z");
@@ -7,7 +7,7 @@ function prevDay(date: string): string {
 }
 
 export function getStreak(
-  db: Database.Database,
+  db: DB,
   childId: number,
   today: string,
 ): number {

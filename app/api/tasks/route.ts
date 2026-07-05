@@ -11,10 +11,14 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   const body = await req.json();
-  const task = assignTask(getDb(), {
-    childId: Number(body.childId),
-    templateId: Number(body.templateId),
-    date: body.date,
-  });
-  return NextResponse.json(task);
+  try {
+    const task = assignTask(getDb(), {
+      childId: Number(body.childId),
+      templateId: Number(body.templateId),
+      date: body.date,
+    });
+    return NextResponse.json(task);
+  } catch (e) {
+    return NextResponse.json({ error: (e as Error).message }, { status: 400 });
+  }
 }

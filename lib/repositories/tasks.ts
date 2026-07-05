@@ -1,4 +1,4 @@
-import type Database from "better-sqlite3";
+import type { DB } from "@/lib/sqlite-compat";
 import type { TaskInstance } from "@/lib/types";
 import { getTemplate } from "@/lib/repositories/templates";
 import { computePoints } from "@/lib/scoring";
@@ -44,7 +44,7 @@ function toTask(r: Row): TaskInstance {
   };
 }
 
-function getTask(db: Database.Database, id: number): TaskInstance | undefined {
+function getTask(db: DB, id: number): TaskInstance | undefined {
   const r = db.prepare("SELECT * FROM task_instances WHERE id = ?").get(id) as
     | Row
     | undefined;
@@ -55,9 +55,15 @@ function getTask(db: Database.Database, id: number): TaskInstance | undefined {
 }
 
 export function assignTask(
-  db: Database.Database,
+  db: DB,
   input: { childId: number; templateId: number; date: string },
 ): TaskInstance {
+  const dup = db
+    .prepare(
+      "SELECT id FROM task_instances WHERE child_id = ? AND template_id = ? AND date = ?",
+    )
+    .get(input.childId, input.templateId, input.date);
+  if (dup) throw new Error("该任务今天已派发，不能重复派发");
   const info = db
     .prepare(
       "INSERT INTO task_instances (child_id, template_id, date, status) VALUES (?, ?, ?, 'pending')",
@@ -66,8 +72,17 @@ export function assignTask(
   return getTask(db, Number(info.lastInsertRowid))!;
 }
 
+export function deleteTask(db: DB, taskId: number): void {
+  const row = db
+    .prepare("SELECT status FROM task_instances WHERE id = ?")
+    .get(taskId) as { status: string } | undefined;
+  if (!row) throw new Error("任务不存在");
+  if (row.status === "scored") throw new Error("任务已评分，无法删除");
+  db.prepare("DELETE FROM task_instances WHERE id = ?").run(taskId);
+}
+
 export function listTasks(
-  db: Database.Database,
+  db: DB,
   childId: number,
   date: string,
 ): TaskInstance[] {
@@ -82,7 +97,7 @@ export function listTasks(
 }
 
 export function scoreTask(
-  db: Database.Database,
+  db: DB,
   taskId: number,
   result: {
     actualMinutes: number;
@@ -140,7 +155,7 @@ export function scoreTask(
   return getTask(db, taskId)!;
 }
 
-export function listTaskBonus(db: Database.Database, taskId: number): number[] {
+export function listTaskBonus(db: DB, taskId: number): number[] {
   const rows = db
     .prepare("SELECT bonus_item_id AS bid FROM task_bonus WHERE task_instance_id = ? ORDER BY bonus_item_id")
     .all(taskId) as { bid: number }[];
@@ -148,7 +163,7 @@ export function listTaskBonus(db: Database.Database, taskId: number): number[] {
 }
 
 export function startTask(
-  db: Database.Database,
+  db: DB,
   taskId: number,
   now?: string,
 ): TaskInstance {
@@ -160,7 +175,7 @@ export function startTask(
 }
 
 export function completeTask(
-  db: Database.Database,
+  db: DB,
   taskId: number,
   now?: string,
 ): TaskInstance {
@@ -172,7 +187,7 @@ export function completeTask(
 }
 
 export function getDayProgress(
-  db: Database.Database,
+  db: DB,
   childId: number,
   date: string,
 ): { total: number; scored: number; pointsEarned: number } {
@@ -195,7 +210,7 @@ export function getDayProgress(
 }
 
 export function ensureDailyTasks(
-  db: Database.Database,
+  db: DB,
   childId: number,
   date: string,
 ): TaskInstance[] {

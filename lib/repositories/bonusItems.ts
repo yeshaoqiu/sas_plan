@@ -1,4 +1,4 @@
-import type Database from "better-sqlite3";
+import type { DB } from "@/lib/sqlite-compat";
 import type { BonusItem } from "@/lib/types";
 
 interface Row {
@@ -21,19 +21,19 @@ function toItem(r: Row): BonusItem {
   };
 }
 
-export function getBonusItem(db: Database.Database, id: number): BonusItem | undefined {
+export function getBonusItem(db: DB, id: number): BonusItem | undefined {
   const r = db.prepare("SELECT * FROM bonus_items WHERE id = ?").get(id) as Row | undefined;
   return r ? toItem(r) : undefined;
 }
 
-export function listBonusItems(db: Database.Database): BonusItem[] {
+export function listBonusItems(db: DB): BonusItem[] {
   const rows = db
     .prepare("SELECT * FROM bonus_items WHERE active = 1 ORDER BY sort_order, id")
     .all() as Row[];
   return rows.map(toItem);
 }
 
-export function listAllBonusItems(db: Database.Database): BonusItem[] {
+export function listAllBonusItems(db: DB): BonusItem[] {
   const rows = db
     .prepare("SELECT * FROM bonus_items ORDER BY active DESC, sort_order, id")
     .all() as Row[];
@@ -41,7 +41,7 @@ export function listAllBonusItems(db: Database.Database): BonusItem[] {
 }
 
 export function createBonusItem(
-  db: Database.Database,
+  db: DB,
   input: { name: string; description?: string; points: number; sortOrder?: number },
 ): BonusItem {
   const info = db
@@ -53,7 +53,7 @@ export function createBonusItem(
 }
 
 export function updateBonusItem(
-  db: Database.Database,
+  db: DB,
   id: number,
   input: { name: string; description: string; points: number; sortOrder: number },
 ): BonusItem {
@@ -63,10 +63,10 @@ export function updateBonusItem(
   return getBonusItem(db, id)!;
 }
 
-export function archiveBonusItem(db: Database.Database, id: number): void {
+export function archiveBonusItem(db: DB, id: number): void {
   db.prepare("UPDATE bonus_items SET active = 0 WHERE id = ?").run(id);
 }
 
-export function restoreBonusItem(db: Database.Database, id: number): void {
+export function restoreBonusItem(db: DB, id: number): void {
   db.prepare("UPDATE bonus_items SET active = 1 WHERE id = ?").run(id);
 }

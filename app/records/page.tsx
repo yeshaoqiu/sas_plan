@@ -64,13 +64,13 @@ export default function Records() {
       </div>
 
       <section>
-        <div className="mb-2 flex items-center gap-3">
-          <h2 className="font-semibold">按天回看任务</h2>
+        <h2 className="mb-2 font-semibold">按天回看任务</h2>
+        <div className="mb-2 flex flex-wrap items-center gap-2">
           <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="input" />
           <div className="flex gap-1">
-            <button onClick={() => setDate(shiftDate(date, -1))} className="btn btn-sky px-2 py-1 text-sm">前一天</button>
-            <button onClick={() => setDate(todayStr())} className="btn btn-primary px-2 py-1 text-sm">今天</button>
-            <button onClick={() => setDate(shiftDate(date, 1))} className="btn btn-sky px-2 py-1 text-sm">后一天</button>
+            <button onClick={() => setDate(shiftDate(date, -1))} className="btn btn-sky px-3 py-1.5 text-sm">前一天</button>
+            <button onClick={() => setDate(todayStr())} className="btn btn-primary px-3 py-1.5 text-sm">今天</button>
+            <button onClick={() => setDate(shiftDate(date, 1))} className="btn btn-sky px-3 py-1.5 text-sm">后一天</button>
           </div>
         </div>
         <ul className="space-y-2">

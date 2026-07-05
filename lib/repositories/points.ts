@@ -1,4 +1,4 @@
-import type Database from "better-sqlite3";
+import type { DB } from "@/lib/sqlite-compat";
 import type { PointEntry } from "@/lib/types";
 
 interface Row {
@@ -24,7 +24,7 @@ function toEntry(r: Row): PointEntry {
 }
 
 export function addPointEntry(
-  db: Database.Database,
+  db: DB,
   input: {
     childId: number;
     delta: number;
@@ -53,21 +53,21 @@ export function addPointEntry(
   return toEntry(r);
 }
 
-export function getBalance(db: Database.Database, childId: number): number {
+export function getBalance(db: DB, childId: number): number {
   const row = db
     .prepare("SELECT COALESCE(SUM(delta), 0) AS bal FROM point_entries WHERE child_id = ?")
     .get(childId) as { bal: number };
   return row.bal;
 }
 
-export function listEntries(db: Database.Database, childId: number): PointEntry[] {
+export function listEntries(db: DB, childId: number): PointEntry[] {
   const rows = db
     .prepare("SELECT * FROM point_entries WHERE child_id = ? ORDER BY id DESC")
     .all(childId) as Row[];
   return rows.map(toEntry);
 }
 
-export function getLifetimeEarned(db: Database.Database, childId: number): number {
+export function getLifetimeEarned(db: DB, childId: number): number {
   const row = db
     .prepare(
       "SELECT COALESCE(SUM(delta), 0) AS s FROM point_entries WHERE child_id = ? AND delta > 0",
@@ -77,7 +77,7 @@ export function getLifetimeEarned(db: Database.Database, childId: number): numbe
 }
 
 export function listRedemptions(
-  db: Database.Database,
+  db: DB,
   childId: number,
 ): PointEntry[] {
   const rows = db

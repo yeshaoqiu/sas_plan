@@ -1,4 +1,4 @@
-import type Database from "better-sqlite3";
+import type { DB } from "@/lib/sqlite-compat";
 import type { Subject, TaskTemplate } from "@/lib/types";
 
 interface Row {
@@ -22,7 +22,7 @@ function toTemplate(r: Row): TaskTemplate {
 }
 
 export function createTemplate(
-  db: Database.Database,
+  db: DB,
   input: { name: string; subject: Subject; defaultMinutes: number; basePoints: number },
 ): TaskTemplate {
   const info = db
@@ -34,7 +34,7 @@ export function createTemplate(
 }
 
 export function updateTemplate(
-  db: Database.Database,
+  db: DB,
   id: number,
   input: { name: string; subject: Subject; defaultMinutes: number; basePoints: number },
 ): TaskTemplate {
@@ -44,22 +44,22 @@ export function updateTemplate(
   return getTemplate(db, id)!;
 }
 
-export function archiveTemplate(db: Database.Database, id: number): void {
+export function archiveTemplate(db: DB, id: number): void {
   db.prepare("UPDATE task_templates SET archived = 1 WHERE id = ?").run(id);
 }
 
-export function restoreTemplate(db: Database.Database, id: number): void {
+export function restoreTemplate(db: DB, id: number): void {
   db.prepare("UPDATE task_templates SET archived = 0 WHERE id = ?").run(id);
 }
 
-export function listTemplates(db: Database.Database): TaskTemplate[] {
+export function listTemplates(db: DB): TaskTemplate[] {
   const rows = db
     .prepare("SELECT * FROM task_templates WHERE archived = 0 ORDER BY id")
     .all() as Row[];
   return rows.map(toTemplate);
 }
 
-export function listAllTemplates(db: Database.Database): TaskTemplate[] {
+export function listAllTemplates(db: DB): TaskTemplate[] {
   const rows = db
     .prepare("SELECT * FROM task_templates ORDER BY archived, id")
     .all() as Row[];
@@ -67,7 +67,7 @@ export function listAllTemplates(db: Database.Database): TaskTemplate[] {
 }
 
 export function getTemplate(
-  db: Database.Database,
+  db: DB,
   id: number,
 ): TaskTemplate | undefined {
   const r = db.prepare("SELECT * FROM task_templates WHERE id = ?").get(id) as

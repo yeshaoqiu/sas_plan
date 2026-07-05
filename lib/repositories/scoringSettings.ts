@@ -1,7 +1,7 @@
-import type Database from "better-sqlite3";
+import type { DB } from "@/lib/sqlite-compat";
 import type { ScoringSettings } from "@/lib/types";
 
-export function getScoringSettings(db: Database.Database): ScoringSettings {
+export function getScoringSettings(db: DB): ScoringSettings {
   const r = db
     .prepare("SELECT on_time_bonus, error_penalty, min_points FROM scoring_settings WHERE id = 1")
     .get() as { on_time_bonus: number; error_penalty: number; min_points: number };
@@ -13,7 +13,7 @@ export function getScoringSettings(db: Database.Database): ScoringSettings {
 }
 
 export function updateScoringSettings(
-  db: Database.Database,
+  db: DB,
   input: { onTimeBonus: number; errorPenalty: number; minPoints: number },
 ): ScoringSettings {
   db.prepare(

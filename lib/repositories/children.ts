@@ -1,8 +1,8 @@
-import type Database from "better-sqlite3";
+import type { DB } from "@/lib/sqlite-compat";
 import type { Child } from "@/lib/types";
 
 export function createChild(
-  db: Database.Database,
+  db: DB,
   input: { name: string; grade: number; avatar?: string },
 ): Child {
   const info = db
@@ -12,7 +12,7 @@ export function createChild(
 }
 
 export function updateChild(
-  db: Database.Database,
+  db: DB,
   id: number,
   input: { name: string; grade: number; avatar: string },
 ): Child {
@@ -21,27 +21,27 @@ export function updateChild(
   return getChild(db, id)!;
 }
 
-export function archiveChild(db: Database.Database, id: number): void {
+export function archiveChild(db: DB, id: number): void {
   db.prepare("UPDATE children SET archived = 1 WHERE id = ?").run(id);
 }
 
-export function restoreChild(db: Database.Database, id: number): void {
+export function restoreChild(db: DB, id: number): void {
   db.prepare("UPDATE children SET archived = 0 WHERE id = ?").run(id);
 }
 
-export function listChildren(db: Database.Database): Child[] {
+export function listChildren(db: DB): Child[] {
   return db
     .prepare("SELECT * FROM children WHERE archived = 0 ORDER BY id")
     .all() as Child[];
 }
 
-export function listAllChildren(db: Database.Database): Child[] {
+export function listAllChildren(db: DB): Child[] {
   return db
     .prepare("SELECT * FROM children ORDER BY archived, id")
     .all() as Child[];
 }
 
-export function getChild(db: Database.Database, id: number): Child | undefined {
+export function getChild(db: DB, id: number): Child | undefined {
   return db.prepare("SELECT * FROM children WHERE id = ?").get(id) as
     | Child
     | undefined;

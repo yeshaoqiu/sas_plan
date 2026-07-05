@@ -12,6 +12,7 @@ export async function POST(
     const res = redeemReward(getDb(), {
       childId: Number(body.childId),
       rewardId: Number(id),
+      quantity: body.quantity != null ? Number(body.quantity) : 1,
     });
     return NextResponse.json(res);
   } catch (e) {
