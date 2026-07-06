@@ -9,6 +9,9 @@
     "test": "vitest run",
     "seed": "tsx scripts/seed.ts"
   },
+  "engines": {
+    "node": ">=22.5"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
