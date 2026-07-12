@@ -7,6 +7,7 @@ export default function Rewards() {
   const [balance, setBalance] = useState(0);
   const [rewards, setRewards] = useState<any[]>([]);
   const [qtys, setQtys] = useState<Record<number, number>>({});
+  const [wishId, setWishId] = useState<number | null>(null);
 
   useEffect(() => {
     fetch("/api/children").then((r) => r.json()).then((c) => {
@@ -20,8 +21,21 @@ export default function Rewards() {
     if (!childId) return;
     const b = await fetch(`/api/children/${childId}/balance`).then((r) => r.json());
     setBalance(b.balance);
+    const w = await fetch(`/api/children/${childId}/wish`).then((r) => r.json());
+    setWishId(w.reward?.id ?? null);
   }
   useEffect(() => { loadBalance(); }, [childId]);
+
+  async function toggleWish(rewardId: number) {
+    if (!childId) return;
+    const next = wishId === rewardId ? null : rewardId;
+    const res = await fetch(`/api/children/${childId}/wish`, {
+      method: "PUT",
+      body: JSON.stringify({ rewardId: next }),
+    });
+    if (!res.ok) { alert((await res.json()).error); return; }
+    setWishId(next);
+  }
 
   const getQty = (id: number) => qtys[id] ?? 1;
   const setQty = (id: number, v: number) => setQtys((q) => ({ ...q, [id]: v }));
@@ -61,8 +75,18 @@ export default function Rewards() {
           const qty = Math.min(Math.max(1, getQty(r.id)), Math.max(1, maxQty));
           return (
             <li key={r.id} className="card flex flex-wrap items-center justify-between gap-3">
-              <span className="flex-1">{r.name}（{r.cost} 分）</span>
+              <span className="flex-1">
+                {r.name}（{r.cost} 分）
+                {wishId === r.id && <span className="ml-2 chip bg-pink-100 text-pink-600 text-xs">💖 心愿</span>}
+              </span>
               <div className="flex items-center gap-3">
+                <button
+                  onClick={() => toggleWish(r.id)}
+                  title={wishId === r.id ? "取消心愿" : "设为心愿目标"}
+                  className={`text-xl leading-none transition-transform hover:scale-110 ${wishId === r.id ? "" : "opacity-40 grayscale"}`}
+                >
+                  💖
+                </button>
                 <div className="flex items-center gap-1">
                   <button
                     onClick={() => setQty(r.id, Math.max(1, qty - 1))}

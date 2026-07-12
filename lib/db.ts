@@ -50,6 +50,14 @@ const MIGRATIONS: { version: number; up: (db: DB) => void }[] = [
       }
     },
   },
+  {
+    version: 2,
+    up: (db) => {
+      if (!hasColumn(db, "children", "wish_reward_id")) {
+        db.exec("ALTER TABLE children ADD COLUMN wish_reward_id INTEGER REFERENCES rewards(id)");
+      }
+    },
+  },
 ];
 
 export const LATEST_SCHEMA_VERSION = MIGRATIONS[MIGRATIONS.length - 1]?.version ?? 0;

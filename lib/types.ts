@@ -7,6 +7,7 @@ export interface Child {
   grade: number;
   avatar: string;
   archived: number;
+  wish_reward_id?: number | null;
 }
 
 export interface TaskTemplate {

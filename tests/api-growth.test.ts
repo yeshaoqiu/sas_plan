@@ -20,4 +20,7 @@ test("growth endpoint returns earned + streak + pet", async () => {
   expect(g.streak).toBe(1);
   expect(g.pet.level).toBe(1); // 13 < 30 → 🥚
   expect(g.pet.emoji).toBe("🥚");
+  // 已完成 1 次评分 → 解锁「初露锋芒」
+  const firstStar = g.badges.find((b: { id: string }) => b.id === "first-star");
+  expect(firstStar.unlocked).toBe(true);
 });

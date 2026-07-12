@@ -36,6 +36,10 @@ export default function Home() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [scoring, setScoring] = useState<number | null>(null);
   const [progress, setProgress] = useState<{ total: number; scored: number; pointsEarned: number }>({ total: 0, scored: 0, pointsEarned: 0 });
+  const [spin, setSpin] = useState<{ unlocked: boolean; spun: boolean; prizeReward: number | null }>({ unlocked: false, spun: false, prizeReward: null });
+  const [spinning, setSpinning] = useState(false);
+  const [spinResult, setSpinResult] = useState<{ emoji: string; label: string; reward: number } | null>(null);
+  const [wish, setWish] = useState<{ reward: { id: number; name: string; cost: number } | null; balance: number; remaining: number; achieved: boolean } | null>(null);
 
   useEffect(() => {
     fetch("/api/children").then((r) => r.json()).then((c) => {
@@ -57,8 +61,29 @@ export default function Home() {
     setTasks(t);
     const p = await fetch(`/api/children/${childId}/progress?date=${date}`).then((r) => r.json());
     setProgress(p);
+    const s = await fetch(`/api/children/${childId}/spin?date=${date}`).then((r) => r.json());
+    setSpin(s);
+    setSpinResult(null);
+    const w = await fetch(`/api/children/${childId}/wish`).then((r) => r.json());
+    setWish(w);
   }
   useEffect(() => { loadTasks(); }, [childId, date]);
+
+  async function doSpin() {
+    if (!childId || spinning) return;
+    setSpinning(true);
+    const res = await fetch(`/api/children/${childId}/spin`, {
+      method: "POST",
+      body: JSON.stringify({ date }),
+    });
+    // 转盘动画时长
+    await new Promise((r) => setTimeout(r, 900));
+    setSpinning(false);
+    if (!res.ok) { alert((await res.json()).error); loadTasks(); return; }
+    const { prize } = await res.json();
+    setSpinResult(prize);
+    setSpin((s) => ({ ...s, spun: true, prizeReward: prize.reward }));
+  }
 
   async function assign(templateId: number) {
     const res = await fetch("/api/tasks", { method: "POST", body: JSON.stringify({ childId, templateId, date }) });
@@ -126,6 +151,48 @@ export default function Home() {
           />
         </div>
       </div>
+
+      {wish && wish.reward && (
+        <div className="card bg-gradient-to-b from-pink-50 to-white">
+          <div className="mb-1 flex items-center justify-between text-sm font-medium">
+            <span>💖 我的心愿：{wish.reward.name}</span>
+            {wish.achieved ? (
+              <span className="text-emerald-600 font-bold">🎉 可以兑换啦！</span>
+            ) : (
+              <span className="text-pink-600">还差 {wish.remaining}⭐</span>
+            )}
+          </div>
+          <div className="h-3 w-full overflow-hidden rounded-full bg-pink-100">
+            <div
+              className="h-full rounded-full bg-pink-400 transition-all"
+              style={{ width: `${wish.reward.cost ? Math.min(100, Math.round((wish.balance / wish.reward.cost) * 100)) : 100}%` }}
+            />
+          </div>
+          <div className="mt-1 text-right text-xs text-slate-400">{wish.balance} / {wish.reward.cost}⭐</div>
+        </div>
+      )}
+
+      {spin.unlocked && (
+        <div className="card flex flex-col items-center gap-3 bg-gradient-to-b from-amber-50 to-white py-5 text-center">
+          <div className="font-semibold text-amber-700">🎡 今日任务全部完成，转盘抽奖！</div>
+          <div className={`text-6xl ${spinning ? "animate-spin-wheel" : ""}`}>
+            {spinResult ? spinResult.emoji : "🎁"}
+          </div>
+          {spinResult ? (
+            <div className="animate-level-pop text-lg font-bold text-emerald-600">
+              {spinResult.label} +{spinResult.reward}⭐
+            </div>
+          ) : spin.spun ? (
+            <div className="text-sm text-slate-500">
+              今天已抽奖 · 获得 +{spin.prizeReward}⭐，明天再来！
+            </div>
+          ) : (
+            <button onClick={doSpin} disabled={spinning} className="btn btn-primary px-6">
+              {spinning ? "抽奖中…" : "开始抽奖 🎲"}
+            </button>
+          )}
+        </div>
+      )}
 
       <div>
         <h2 className="mb-2 font-semibold">今日任务</h2>

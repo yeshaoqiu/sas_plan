@@ -3,7 +3,8 @@ CREATE TABLE IF NOT EXISTS children (
   name TEXT NOT NULL,
   grade INTEGER NOT NULL,
   avatar TEXT NOT NULL DEFAULT '🐣',
-  archived INTEGER NOT NULL DEFAULT 0
+  archived INTEGER NOT NULL DEFAULT 0,
+  wish_reward_id INTEGER REFERENCES rewards(id)
 );
 
 CREATE TABLE IF NOT EXISTS task_templates (

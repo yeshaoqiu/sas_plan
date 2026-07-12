@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
 import { getLifetimeEarned } from "@/lib/repositories/points";
-import { getStreak } from "@/lib/repositories/growth";
+import { getStreak, getMaxStreak, getBadgeStats } from "@/lib/repositories/growth";
 import { getPetStage } from "@/lib/pet";
+import { evaluateBadges } from "@/lib/badges";
 
 export async function GET(
   req: Request,
@@ -14,5 +15,8 @@ export async function GET(
   const childId = Number(id);
   const earned = getLifetimeEarned(db, childId);
   const streak = getStreak(db, childId, today);
-  return NextResponse.json({ earned, streak, pet: getPetStage(earned) });
+  const maxStreak = getMaxStreak(db, childId);
+  const { scoredCount, focusedCount, checkedCount } = getBadgeStats(db, childId);
+  const badges = evaluateBadges({ earned, maxStreak, scoredCount, focusedCount, checkedCount });
+  return NextResponse.json({ earned, streak, pet: getPetStage(earned), badges });
 }

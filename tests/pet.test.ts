@@ -19,10 +19,18 @@ test("picks highest satisfied stage and computes toNext", () => {
   expect(s.toNext).toBe(60);
 });
 
+test("mid stage 🦅 at 450..680", () => {
+  const s = getPetStage(1000); // >=1000 (🦢) but <1400
+  expect(s.level).toBe(8);
+  expect(s.emoji).toBe("🦢");
+  expect(s.nextMin).toBe(1400);
+  expect(s.toNext).toBe(400);
+});
+
 test("max level has null nextMin and 0 toNext", () => {
-  const s = getPetStage(1000); // >=450
-  expect(s.level).toBe(6);
-  expect(s.emoji).toBe("🦅");
+  const s = getPetStage(10000); // >=9500
+  expect(s.level).toBe(18);
+  expect(s.emoji).toBe("🌟");
   expect(s.nextMin).toBeNull();
   expect(s.toNext).toBe(0);
 });
